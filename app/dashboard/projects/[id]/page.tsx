@@ -14,12 +14,11 @@ import 'react-quill/dist/quill.snow.css';
 
 // --- TIPOS ---
 
-// CORREÇÃO: Ajustando o tipo 'ProjectFile' para ser compatível com a resposta do Supabase Storage.
 type ProjectFile = {
     name: string;
     id: string;
     created_at: string;
-    metadata: Record<string, any>; // O metadata é um objeto com chaves dinâmicas.
+    metadata: Record<string, any>; 
 };
 
 
@@ -337,7 +336,9 @@ export default function ProjectDetailPage() {
                             <InfoItem icon={User} label="Cliente" value={project?.clientes?.nome || 'N/A'} />
                             <InfoItem icon={Calendar} label="Data de Início" value={project ? new Date(project.created_at).toLocaleDateString() : null} />
                             <InfoItem icon={Calendar} label="Previsão de Entrega" value={project ? new Date(project.data_entrega).toLocaleDateString() : null} />
-                            <InfoItem icon={Tag} label="Tipo de Projeto" value={project?.tipo_projeto} />
+                            {/* CORREÇÃO: Adicionando '|| null' para garantir a compatibilidade de tipos. */}
+                            <InfoItem icon={Tag} label="Tipo de Projeto" value={project?.tipo_projeto || null} />
+                            <InfoItem icon={DollarSign} label="Valor do Projeto" value={project ? `R$ ${project.valor_total.toFixed(2)}` : null} />
                         </div>
                         <div className="border-t border-light-tertiary pt-6">
                             <h3 className="font-semibold text-dark-text mb-2">Descrição</h3>
