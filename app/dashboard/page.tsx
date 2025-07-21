@@ -6,11 +6,23 @@
 import { ArrowUpRight, ArrowDownRight, DollarSign, Users, Briefcase, ArrowUp, ArrowDown } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend } from 'recharts';
 
-// --- DADOS DE EXEMPLO ---
+// --- TIPOS E DADOS DE EXEMPLO ---
+
+// CORREÇÃO: Definindo um tipo explícito para a transação para garantir a segurança de tipos.
+type RecentTransaction = {
+    type: 'income' | 'expense';
+    description: string;
+    date: string;
+    amount: number;
+    status: 'Pago' | 'Pendente';
+};
+
 const monthlyRevenueData = [ { name: 'Jan', Receita: 1600 }, { name: 'Fev', Receita: 1800 }, { name: 'Mar', Receita: 2200 }, { name: 'Abr', Receita: 2500 }, { name: 'Mai', Receita: 3200 }, { name: 'Jun', Receita: 3000 }, ];
 const spendingData = [ { name: 'Design', value: 40 }, { name: 'Development', value: 35 }, { name: 'Marketing', value: 15 }, { name: 'Others', value: 10 }, ];
 const COLORS = ['#19B884', '#007BFF', '#FFC107', '#6C757D'];
-const recentTransactions = [
+
+// CORREÇÃO: Aplicando o tipo ao array de dados.
+const recentTransactions: RecentTransaction[] = [
     { type: 'income', description: 'Projeto Website - Cliente ABC', date: '2 dias atrás', amount: 2500, status: 'Pago' },
     { type: 'expense', description: 'Hospedagem AWS', date: '3 dias atrás', amount: 150, status: 'Pago' },
     { type: 'income', description: 'Design Logo - Cliente XYZ', date: '5 dias atrás', amount: 800, status: 'Pendente' },
@@ -26,7 +38,8 @@ function ProgressBar({ value, className }: { value: number, className: string })
     );
 }
 
-function TransactionItem({ type, description, date, amount, status }: typeof recentTransactions[0]) {
+// CORREÇÃO: Usando o tipo explícito 'RecentTransaction' para as props.
+function TransactionItem({ type, description, date, amount, status }: RecentTransaction) {
     const isIncome = type === 'income';
     const statusClasses = {
         'Pago': 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
