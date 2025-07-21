@@ -13,15 +13,15 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
 // --- TIPOS ---
+
+// CORREÇÃO: Ajustando o tipo 'ProjectFile' para ser compatível com a resposta do Supabase Storage.
 type ProjectFile = {
     name: string;
     id: string;
     created_at: string;
-    metadata: {
-        size: number;
-        mimetype: string;
-    };
+    metadata: Record<string, any>; // O metadata é um objeto com chaves dinâmicas.
 };
+
 
 // --- COMPONENTES ---
 
@@ -140,7 +140,7 @@ function FilesTab({ projectId }: { projectId: string }) {
                 const filePath = `${user.id}/${projectId}/${file.name}`;
                 await supabase.storage
                     .from('project-files')
-                    .upload(filePath, file, { upsert: true }); // upsert: true para sobrescrever se já existir
+                    .upload(filePath, file, { upsert: true });
             }
 
             setIsUploading(false);
@@ -380,3 +380,4 @@ export default function ProjectDetailPage() {
         </div>
     );
 }
+
