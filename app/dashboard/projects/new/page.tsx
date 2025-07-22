@@ -1,12 +1,15 @@
 // app/dashboard/projects/new/page.tsx
-// Página com formulário para cadastrar um novo projeto com lógica de pagamento.
+// Página com formulário para cadastrar um novo projeto, agora com categorias dinâmicas.
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { type Client } from '@/types'; 
+
+// Definindo o tipo para as categorias aqui para simplicidade
+type Categoria = { id: string; nome: string; tipo: string; };
 
 export default function NewProjectPage() {
     const router = useRouter();
@@ -14,42 +17,39 @@ export default function NewProjectPage() {
 
     // --- ESTADOS DO FORMULÁRIO ---
     const [clients, setClients] = useState<Client[]>([]);
+    const [projectCategories, setProjectCategories] = useState<Categoria[]>([]);
     
-    // Dados do Projeto
     const [nome_projeto, setNomeProjeto] = useState('');
     const [cliente_id, setClienteId] = useState('');
     const [tipo_projeto, setTipoProjeto] = useState('');
     const [data_entrega, setDataEntrega] = useState('');
     const [status_entrega, setStatusEntrega] = useState('A fazer');
     const [descricao, setDescricao] = useState('');
-
-    // Dados Financeiros
     const [valor_total, setValorTotal] = useState<number | ''>('');
     const [forma_pagamento, setFormaPagamento] = useState('À Vista');
     const [entrada_recebida, setEntradaRecebida] = useState(false);
     const [assinatura, setAssinatura] = useState(false);
-
-    // Dados de Parcelas (condicionais)
     const [parcela1_valor, setParcela1Valor] = useState<number | ''>('');
     const [parcela1_data, setParcela1Data] = useState('');
     const [parcela2_data, setParcela2Data] = useState('');
     const [numero_parcelas, setNumeroParcelas] = useState<number | ''>(2);
     const [data_primeira_parcela, setDataPrimeiraParcela] = useState('');
-    
-    // UI Feedback
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     // --- LÓGICA ---
 
     useEffect(() => {
-        const fetchClients = async () => {
-            const { data, error } = await supabase.from('clientes').select('id, nome');
-            if (data) {
-                setClients(data as Client[]);
-            }
+        const fetchData = async () => {
+            setLoading(true);
+            const { data: clientsData } = await supabase.from('clientes').select('id, nome');
+            if (clientsData) setClients(clientsData as Client[]);
+
+            const { data: categoriesData } = await supabase.from('categorias').select('*').eq('tipo', 'projeto');
+            if (categoriesData) setProjectCategories(categoriesData);
+            setLoading(false);
         };
-        fetchClients();
+        fetchData();
     }, [supabase]);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -63,15 +63,14 @@ export default function NewProjectPage() {
             setLoading(false);
             return;
         }
-
-        // Lógica para gerar o array de parcelas
+        
         const parcelas = [];
         if (forma_pagamento === 'À Vista' && valor_total) {
             parcelas.push({ valor: valor_total, data: parcela1_data, pago: entrada_recebida });
-        } else if (forma_pagamento === '50/50' && parcela1_valor) {
+        } else if (forma_pagamento === '50/50' && parcela1_valor && valor_total) {
             parcelas.push({ valor: parcela1_valor, data: parcela1_data, pago: entrada_recebida });
-            parcelas.push({ valor: (valor_total || 0) - parcela1_valor, data: parcela2_data, pago: false });
-        } else if (forma_pagamento === 'Parcelado' && numero_parcelas && valor_total) {
+            parcelas.push({ valor: valor_total - parcela1_valor, data: parcela2_data, pago: false });
+        } else if (forma_pagamento === 'Parcelado' && numero_parcelas && valor_total && data_primeira_parcela) {
             const valorParcela = valor_total / numero_parcelas;
             for (let i = 0; i < numero_parcelas; i++) {
                 const dataParcela = new Date(data_primeira_parcela);
@@ -86,6 +85,7 @@ export default function NewProjectPage() {
         };
         
         const status_pagamento = entrada_recebida ? (parcelas.every(p => p.pago) ? 'Totalmente pago' : 'Parcialmente pago') : 'Pendente';
+
 
         const { error: insertError } = await supabase
             .from('projetos')
@@ -117,7 +117,6 @@ export default function NewProjectPage() {
             <div className="bg-light-secondary p-8 rounded-xl shadow-card">
                 <h1 className="text-2xl font-bold text-dark-text mb-8">Cadastrar Novo Projeto</h1>
                 <form onSubmit={handleSubmit} className="space-y-8">
-                    
                     {/* Seção de Detalhes do Projeto */}
                     <div className="space-y-6">
                         <h2 className="text-lg font-semibold border-b border-light-tertiary pb-2">Detalhes do Projeto</h2>
@@ -137,10 +136,9 @@ export default function NewProjectPage() {
                                 <label htmlFor="tipo_projeto" className="block text-sm font-medium text-gray-text mb-1">Tipo de Projeto*</label>
                                 <select id="tipo_projeto" value={tipo_projeto} onChange={(e) => setTipoProjeto(e.target.value)} required className="w-full p-3 bg-gray-50 border border-light-tertiary rounded-lg">
                                     <option value="" disabled>Selecione um tipo</option>
-                                    <option>Criação de Site</option>
-                                    <option>Identidade Visual</option>
-                                    <option>Suporte Wordpress</option>
-                                    <option>Outro</option>
+                                    {projectCategories.map(cat => (
+                                        <option key={cat.id} value={cat.nome}>{cat.nome}</option>
+                                    ))}
                                 </select>
                             </div>
                              <div>
@@ -165,7 +163,6 @@ export default function NewProjectPage() {
                     {/* Seção de Pagamento */}
                     <div className="space-y-6">
                         <h2 className="text-lg font-semibold border-b border-light-tertiary pb-2">Detalhes Financeiros</h2>
-                        
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                <label htmlFor="valor_total" className="block text-sm font-medium text-gray-text mb-1">Valor Total do Projeto (R$)*</label>
@@ -181,7 +178,6 @@ export default function NewProjectPage() {
                             </div>
                         </div>
 
-                        {/* Campos Condicionais de Pagamento */}
                         {forma_pagamento === 'À Vista' && (
                             <div>
                                 <label htmlFor="parcela1_data" className="block text-sm font-medium text-gray-text mb-1">Data do Pagamento*</label>
@@ -218,7 +214,6 @@ export default function NewProjectPage() {
                         )}
                     </div>
 
-                    {/* Opções Finais */}
                     <div className="space-y-4 pt-4 border-t border-light-tertiary">
                         <div className="flex items-center gap-3">
                             <input type="checkbox" id="entrada_recebida" checked={entrada_recebida} onChange={(e) => setEntradaRecebida(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-brand-green focus:ring-brand-green" />
@@ -229,7 +224,6 @@ export default function NewProjectPage() {
                             <label htmlFor="assinatura" className="text-sm font-medium text-gray-text">Este projeto é uma assinatura recorrente?</label>
                         </div>
                     </div>
-
 
                     {error && <p className="text-sm text-danger-text mt-4">{error}</p>}
 

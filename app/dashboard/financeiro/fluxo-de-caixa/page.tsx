@@ -8,6 +8,9 @@ import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { type Transacao, type Client, type Project } from '@/types';
 import { Plus, ArrowUp, ArrowDown, MoreHorizontal, Check, Search } from 'lucide-react';
 
+// Definindo o tipo para as categorias aqui para simplicidade
+type Categoria = { id: string; nome: string; tipo: string; };
+
 // --- COMPONENTES ---
 
 function StatCard({ title, value, isPositive }: { title: string; value: string; isPositive?: boolean; }) {
@@ -26,6 +29,7 @@ function TransactionListItem({ t, onStatusChange }: { t: Transacao; onStatusChan
 
     return (
         <div className="border-b border-light-tertiary dark:border-dark-tertiary last:border-b-0">
+            {/* Layout para Desktop */}
             <div className="hidden md:grid md:grid-cols-12 gap-4 items-center py-4 px-5 hover:bg-gray-50 dark:hover:bg-dark-tertiary/50 transition-colors text-sm">
                 <div className="col-span-4 flex items-center gap-3">
                     <div className={`p-2 rounded-full ${isIncome ? 'bg-green-100 dark:bg-green-900/50' : 'bg-red-100 dark:bg-red-900/50'}`}>
@@ -33,20 +37,32 @@ function TransactionListItem({ t, onStatusChange }: { t: Transacao; onStatusChan
                     </div>
                     <div>
                         <p className="font-semibold text-dark-text dark:text-light-text">{t.descricao}</p>
-                        <p className="text-xs text-gray-text dark:text-gray-400">{t.projetos?.descricao || 'Geral'}</p>
+                        <p className="text-xs text-gray-text dark:text-gray-400">
+                            {t.projetos?.descricao || 'Geral'}
+                        </p>
                     </div>
                 </div>
                 <div className="col-span-2 text-gray-text dark:text-gray-400">{t.categoria}</div>
                 <div className="col-span-2 text-gray-text dark:text-gray-400">{new Date(t.data).toLocaleDateString()}</div>
                 <div className="col-span-2">
-                    <button onClick={() => onStatusChange(t.id, isPaid ? 'Pendente' : 'Pago')} className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${isPaid ? 'bg-brand-green' : 'bg-gray-300 dark:bg-dark-tertiary'}`} title={`Marcar como ${isPaid ? 'Pendente' : 'Pago'}`}>
-                      <span className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform ${isPaid ? 'translate-x-6' : ''}`}>
+                    <button
+                      onClick={() => onStatusChange(t.id, isPaid ? 'Pendente' : 'Pago')}
+                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ease-in-out ${isPaid ? 'bg-brand-green' : 'bg-gray-300 dark:bg-dark-tertiary'}`}
+                      title={`Marcar como ${isPaid ? 'Pendente' : 'Pago'}`}
+                    >
+                      <span className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${isPaid ? 'translate-x-6' : ''}`}>
                         {isPaid && <Check className="w-3 h-3 text-brand-green translate-x-0.5 translate-y-0.5" />}
                       </span>
                     </button>
                 </div>
-                <div className={`col-span-1 font-semibold ${isIncome ? 'text-success-text' : 'text-danger-text'}`}>{isIncome ? '+' : '-'} R$ {t.valor.toFixed(2)}</div>
-                <div className="col-span-1 flex justify-end"><button className="p-2 text-gray-text hover:bg-gray-200 dark:hover:bg-dark-tertiary rounded-full"><MoreHorizontal className="w-4 h-4" /></button></div>
+                <div className={`col-span-1 font-semibold ${isIncome ? 'text-success-text' : 'text-danger-text'}`}>
+                    {isIncome ? '+' : '-'} R$ {t.valor.toFixed(2)}
+                </div>
+                <div className="col-span-1 flex justify-end">
+                    <button className="p-2 text-gray-text hover:bg-gray-200 dark:hover:bg-dark-tertiary rounded-full">
+                        <MoreHorizontal className="w-4 h-4" />
+                    </button>
+                </div>
             </div>
         </div>
     );
@@ -62,15 +78,25 @@ function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClos
     const [cliente_id, setClienteId] = useState<string | null>(null);
     const [projeto_id, setProjetoId] = useState<string | null>(null);
     const [status, setStatus] = useState<'Pago' | 'Pendente' | 'Atrasado'>('Pendente');
+
     const [clients, setClients] = useState<Client[]>([]);
     const [projects, setProjects] = useState<Project[]>([]);
+    const [incomeCategories, setIncomeCategories] = useState<Categoria[]>([]);
+    const [expenseCategories, setExpenseCategories] = useState<Categoria[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
             const { data: clientsData } = await supabase.from('clientes').select('id, nome');
             if (clientsData) setClients(clientsData as Client[]);
+            
             const { data: projectsData } = await supabase.from('projetos').select('id, descricao');
             if (projectsData) setProjects(projectsData as Project[]);
+
+            const { data: categoriesData } = await supabase.from('categorias').select('*');
+            if (categoriesData) {
+                setIncomeCategories(categoriesData.filter(c => c.tipo === 'receita'));
+                setExpenseCategories(categoriesData.filter(c => c.tipo === 'despesa'));
+            }
         };
         if (isOpen) fetchData();
     }, [supabase, isOpen]);
@@ -81,6 +107,8 @@ function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClos
         e.preventDefault();
         onSave({ descricao, tipo, categoria, valor: Number(valor), data, cliente_id, projeto_id, status });
     };
+    
+    const currentCategories = tipo === 'Receita' ? incomeCategories : expenseCategories;
 
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
@@ -90,8 +118,22 @@ function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClos
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="md:col-span-2"><label htmlFor="descricao" className="block text-sm font-medium text-gray-text mb-1">Descrição*</label><input type="text" id="descricao" value={descricao} onChange={(e) => setDescricao(e.target.value)} required className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg" /></div>
-                        <div><label htmlFor="tipo" className="block text-sm font-medium text-gray-text mb-1">Tipo*</label><select id="tipo" value={tipo} onChange={(e) => setTipo(e.target.value as any)} className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg"><option>Receita</option><option>Despesa</option></select></div>
-                        <div><label htmlFor="categoria" className="block text-sm font-medium text-gray-text mb-1">Categoria*</label><input type="text" id="categoria" value={categoria} onChange={(e) => setCategoria(e.target.value)} required placeholder="Ex: Venda, Assinatura, Software" className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg" /></div>
+                        <div>
+                            <label htmlFor="tipo" className="block text-sm font-medium text-gray-text mb-1">Tipo*</label>
+                            <select id="tipo" value={tipo} onChange={(e) => setTipo(e.target.value as any)} className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg">
+                                <option>Receita</option>
+                                <option>Despesa</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label htmlFor="categoria" className="block text-sm font-medium text-gray-text mb-1">Categoria*</label>
+                            <select id="categoria" value={categoria} onChange={(e) => setCategoria(e.target.value)} required className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg">
+                                <option value="" disabled>Selecione</option>
+                                {currentCategories.map(cat => (
+                                    <option key={cat.id} value={cat.nome}>{cat.nome}</option>
+                                ))}
+                            </select>
+                        </div>
                         <div><label htmlFor="valor" className="block text-sm font-medium text-gray-text mb-1">Valor (R$)*</label><input type="number" step="0.01" id="valor" value={valor} onChange={(e) => setValor(Number(e.target.value))} required className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg" /></div>
                         <div><label htmlFor="data" className="block text-sm font-medium text-gray-text mb-1">Data*</label><input type="date" id="data" value={data} onChange={(e) => setData(e.target.value)} required className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg" /></div>
                         <div><label htmlFor="cliente" className="block text-sm font-medium text-gray-text mb-1">Cliente</label><select id="cliente" value={cliente_id || ''} onChange={(e) => setClienteId(e.target.value)} className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg"><option value="">Nenhum</option>{clients.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}</select></div>
@@ -134,7 +176,7 @@ export default function CashFlowPage() {
             return tabFilter && searchFilter && monthFilter;
         });
     }, [transactions, activeTab, searchTerm, selectedMonth]);
-    
+
     const handleSaveTransaction = async (transactionData: Omit<Transacao, 'id' | 'projetos' | 'clientes'>) => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
@@ -146,15 +188,16 @@ export default function CashFlowPage() {
             alert("Erro ao salvar transação: " + error.message);
         }
     };
-    
+
     const handleStatusChange = async (id: string, newStatus: 'Pago' | 'Pendente') => {
         setTransactions(transactions.map(t => t.id === id ? { ...t, status: newStatus } : t));
         await supabase.from('transacoes').update({ status: newStatus }).eq('id', id);
     };
 
-    const totalReceita = filteredTransactions.filter(t => t.tipo === 'Receita').reduce((sum, t) => sum + t.valor, 0);
-    const totalDespesa = filteredTransactions.filter(t => t.tipo === 'Despesa').reduce((sum, t) => sum + t.valor, 0);
-    const saldoAtual = totalReceita - totalDespesa;
+    // AJUSTE: Lógica dos indicadores atualizada
+    const receitaRecebida = filteredTransactions.filter(t => t.tipo === 'Receita' && t.status === 'Pago').reduce((sum, t) => sum + t.valor, 0);
+    const despesaPaga = filteredTransactions.filter(t => t.tipo === 'Despesa' && t.status === 'Pago').reduce((sum, t) => sum + t.valor, 0);
+    const saldoAtual = receitaRecebida - despesaPaga;
     const aReceber = filteredTransactions.filter(t => t.tipo === 'Receita' && t.status === 'Pendente').reduce((sum, t) => sum + t.valor, 0);
     const aPagar = filteredTransactions.filter(t => t.tipo === 'Despesa' && t.status === 'Pendente').reduce((sum, t) => sum + t.valor, 0);
 
@@ -166,11 +209,11 @@ export default function CashFlowPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                <StatCard title="Receita (Filtro)" value={`R$ ${totalReceita.toFixed(2)}`} isPositive={true} />
-                <StatCard title="Despesa (Filtro)" value={`R$ ${totalDespesa.toFixed(2)}`} isPositive={false} />
-                <StatCard title="Saldo (Filtro)" value={`R$ ${saldoAtual.toFixed(2)}`} />
-                <StatCard title="A Receber (Filtro)" value={`R$ ${aReceber.toFixed(2)}`} />
-                <StatCard title="A Pagar (Filtro)" value={`R$ ${aPagar.toFixed(2)}`} />
+                <StatCard title="Receita Recebida" value={`R$ ${receitaRecebida.toFixed(2)}`} isPositive={true} />
+                <StatCard title="Despesa Paga" value={`R$ ${despesaPaga.toFixed(2)}`} isPositive={false} />
+                <StatCard title="Saldo Atual" value={`R$ ${saldoAtual.toFixed(2)}`} />
+                <StatCard title="A Receber" value={`R$ ${aReceber.toFixed(2)}`} />
+                <StatCard title="A Pagar" value={`R$ ${aPagar.toFixed(2)}`} />
             </div>
 
             <div className="bg-light-secondary dark:bg-dark-secondary rounded-xl shadow-card">
@@ -181,7 +224,10 @@ export default function CashFlowPage() {
                         <button onClick={() => setActiveTab('Saídas')} className={`px-4 py-1.5 text-sm font-semibold rounded-md ${activeTab === 'Saídas' ? 'bg-white dark:bg-dark-secondary shadow' : 'text-gray-text'}`}>Saídas</button>
                     </div>
                     <div className="flex items-center gap-4">
-                        <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-text" /><input type="text" placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="bg-gray-100 dark:bg-dark-tertiary rounded-lg pl-9 pr-3 py-2 text-sm w-48" /></div>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-text" />
+                            <input type="text" placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="bg-gray-100 dark:bg-dark-tertiary rounded-lg pl-9 pr-3 py-2 text-sm w-48" />
+                        </div>
                         <input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="bg-gray-100 dark:bg-dark-tertiary rounded-lg px-3 py-2 text-sm" />
                     </div>
                 </div>
@@ -210,4 +256,3 @@ export default function CashFlowPage() {
         </div>
     );
 }
-

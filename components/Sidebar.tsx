@@ -1,5 +1,5 @@
 // components/Sidebar.tsx
-// Componente reutilizável para a barra de navegação lateral, agora com suporte a submenus.
+// Componente reutilizável para a barra de navegação lateral, agora com o menu de Configurações.
 
 'use client';
 
@@ -7,19 +7,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard,
-  Wallet,
-  Users,
-  Settings,
-  LogOut,
-  FileText,
-  DollarSign,
-  ChevronDown,
-  Landmark,
-  ArrowRightLeft,
-  HandCoins,
-  Building2,
-  Repeat
+  LayoutDashboard, Wallet, Users, FileText, DollarSign, ChevronDown, Landmark,
+  ArrowRightLeft, HandCoins, Building2, Repeat, Settings, LogOut, Palette, BarChart3
 } from 'lucide-react';
 
 // --- TIPOS E DADOS ---
@@ -38,6 +27,8 @@ const navItems: NavItem[] = [
       icon: DollarSign, 
       text: 'Financeiro',
       subItems: [
+          // NOVO: Link para a Visão Geral
+          { href: '/dashboard/financeiro/visao-geral', text: 'Visão Geral', icon: BarChart3 },
           { href: '/dashboard/financeiro/bancos', text: 'Bancos', icon: Landmark },
           { href: '/dashboard/financeiro/fluxo-de-caixa', text: 'Fluxo de Caixa', icon: ArrowRightLeft },
           { href: '#', text: 'Empréstimos', icon: HandCoins },
@@ -135,7 +126,14 @@ export default function Sidebar() {
                 </nav>
             </div>
             <div className="flex flex-col space-y-2">
-                <NavLink href="#" icon={Settings} text="Configurações" active={false} />
+                <NavGroup 
+                    icon={Settings}
+                    text="Configurações"
+                    subItems={[
+                        { href: '/dashboard/settings/customization', text: 'Personalização', icon: Palette }
+                    ]}
+                    activeSubItem={pathname.startsWith('/dashboard/settings')}
+                />
                 <NavLink href="/auth/login" icon={LogOut} text="Sair" active={false} />
             </div>
         </aside>
