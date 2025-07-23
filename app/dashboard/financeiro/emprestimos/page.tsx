@@ -22,6 +22,8 @@ type Categoria = { id: string; nome: string; };
 type EmprestimoDetalhado = Emprestimo & {
     total_pago: number;
     parcelas_pagas: number;
+    proxima_parcela_valor: number | null;
+    proxima_parcela_vencimento: string | null;
 };
 
 // --- FUNÇÕES UTILITÁRIAS ---
@@ -48,11 +50,11 @@ function LoanListItem({ loan }: { loan: EmprestimoDetalhado }) {
         <div className="bg-light-secondary dark:bg-dark-secondary p-6 rounded-xl shadow-card space-y-4">
             <div className="flex justify-between items-start">
                 <div>
+                    {/* AJUSTE: Exibe o título ou o tipo do empréstimo (categoria) */}
                     <h3 className="text-xl font-bold">{loan.titulo || loan.tipo_emprestimo}</h3>
                     <p className="text-sm text-gray-text">{loan.instituicao}</p>
                     <div className="flex items-center gap-4 mt-1 text-xs">
                         <span className="bg-green-100 text-green-800 font-semibold px-2 py-0.5 rounded">{loan.status}</span>
-                        <span className="text-gray-text">Taxa: {loan.taxa_juros || 'N/A'}% a.m.</span>
                     </div>
                 </div>
                 <div className="text-right">
@@ -82,8 +84,11 @@ function LoanListItem({ loan }: { loan: EmprestimoDetalhado }) {
                 </div>
                 <div>
                     <p className="text-xs text-gray-text">Próxima Parcela</p>
-                    <p className="font-semibold">{/* Placeholder */}</p>
-                    <p className="text-xs text-gray-text">{/* Placeholder */}</p>
+                    {/* AJUSTE: Exibe os dados reais da próxima parcela */}
+                    <p className="font-semibold">{formatCurrency(loan.proxima_parcela_valor)}</p>
+                    <p className="text-xs text-gray-text">
+                        Venc: {loan.proxima_parcela_vencimento ? new Date(loan.proxima_parcela_vencimento).toLocaleDateString() : 'Quitado'}
+                    </p>
                 </div>
             </div>
             <div className="flex justify-end gap-2">
@@ -148,7 +153,7 @@ function LoanModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () =
                 tipo_emprestimo,
                 instituicao,
                 valor_original: valor_total_calculado,
-                taxa_juros: null, // Campo removido
+                taxa_juros: null,
                 numero_parcelas: Number(numero_parcelas),
                 data_contratacao,
             })
@@ -192,7 +197,7 @@ function LoanModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () =
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
             <div className="bg-light-secondary dark:bg-dark-secondary p-8 rounded-xl shadow-lg w-full max-w-lg">
                 <h2 className="text-xl font-bold mb-1">Cadastrar Novo Empréstimo</h2>
-                <p className="text-sm text-gray-text mb-6">Preencha os dados do seu empréstimo ou financiamento.</p>
+                <p className="text-sm text-gray-text mb-6">Emprestimos, Cartõers de crédito e financimantos</p>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -251,30 +256,13 @@ export default function LoansPage() {
 
     const fetchLoans = useCallback(async () => {
         setLoading(true);
-        
-        const { data: emprestimosData, error: emprestimosError } = await supabase.from('emprestimos').select('*');
-        if (emprestimosError) {
-            console.error("Erro ao buscar empréstimos:", emprestimosError);
-            setLoading(false);
-            return;
+        const { data, error } = await supabase.rpc('get_loan_details');
+        if (data) {
+            setLoans(data as EmprestimoDetalhado[]);
         }
-
-        const detailedLoans = await Promise.all(
-            emprestimosData.map(async (emprestimo) => {
-                const { data: parcelasData, error: parcelasError } = await supabase
-                    .from('parcelas_emprestimo')
-                    .select('valor_parcela')
-                    .eq('emprestimo_id', emprestimo.id)
-                    .eq('status', 'Paga');
-
-                const total_pago = parcelasData?.reduce((sum, p) => sum + p.valor_parcela, 0) || 0;
-                const parcelas_pagas = parcelasData?.length || 0;
-
-                return { ...emprestimo, total_pago, parcelas_pagas };
-            })
-        );
-
-        setLoans(detailedLoans as EmprestimoDetalhado[]);
+        if (error) {
+            console.error("Erro ao buscar detalhes dos empréstimos:", error);
+        }
         setLoading(false);
     }, [supabase]);
 
