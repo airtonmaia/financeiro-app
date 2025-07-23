@@ -196,6 +196,7 @@ function LoanModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () =
                             <label htmlFor="nome" className="block text-sm font-medium text-gray-text mb-1">Tipo de Empréstimo*</label>
                             <select id="nome" value={nome} onChange={(e) => setNome(e.target.value)} required className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg">
                                 <option value="" disabled>Selecione o tipo</option>
+                                 <option>Emprestimo</option>
                                 <option>Capital de Giro</option>
                                 <option>Financiamento Equipamentos</option>
                                 <option>Crédito Imobiliário</option>
