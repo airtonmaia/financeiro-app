@@ -1,242 +1,143 @@
-// app/dashboard/projects/new/page.tsx
-// Página com formulário para cadastrar um novo projeto, agora com categorias dinâmicas.
+// app/dashboard/financeiro/emprestimos/page.tsx
+// Página para gerenciar empréstimos e financiamentos.
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
-import { type Client } from '@/types'; 
+import { Plus, DollarSign, TrendingUp, TrendingDown, Calendar } from 'lucide-react';
 
-// Definindo o tipo para as categorias aqui para simplicidade
-type Categoria = { id: string; nome: string; tipo: string; };
+// --- TIPOS ---
+type Emprestimo = {
+    id: string;
+    titulo: string | null;
+    tipo_emprestimo: string;
+    instituicao: string | null;
+    valor_original: number;
+    taxa_juros: number | null;
+    numero_parcelas: number;
+    status: string;
+};
+type Categoria = { id: string; nome: string; };
+type EmprestimoDetalhado = Emprestimo & {
+    total_pago: number;
+    parcelas_pagas: number;
+};
+const formatCurrency = (value: number | null | undefined) => {
+    if (value === null || value === undefined) return 'R$ 0,00';
+    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+};
 
-export default function NewProjectPage() {
-    const router = useRouter();
+// --- COMPONENTES ---
+
+function StatCard({ title, value, colorClass }: { title: string; value: string; colorClass?: string; }) { /* ...código anterior... */ }
+function LoanListItem({ loan }: { loan: EmprestimoDetalhado }) { /* ...código anterior... */ }
+
+// Modal para Adicionar Empréstimo
+function LoanModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () => void; onSave: () => void; }) {
     const supabase = createSupabaseBrowserClient();
-
-    // --- ESTADOS DO FORMULÁRIO ---
-    const [clients, setClients] = useState<Client[]>([]);
-    const [projectCategories, setProjectCategories] = useState<Categoria[]>([]);
     
-    const [nome_projeto, setNomeProjeto] = useState('');
-    const [cliente_id, setClienteId] = useState('');
-    const [tipo_projeto, setTipoProjeto] = useState('');
-    const [data_entrega, setDataEntrega] = useState('');
-    const [status_entrega, setStatusEntrega] = useState('A fazer');
-    const [descricao, setDescricao] = useState('');
-    const [valor_total, setValorTotal] = useState<number | ''>('');
-    const [forma_pagamento, setFormaPagamento] = useState('À Vista');
-    const [entrada_recebida, setEntradaRecebida] = useState(false);
-    const [assinatura, setAssinatura] = useState(false);
-    const [parcela1_valor, setParcela1Valor] = useState<number | ''>('');
-    const [parcela1_data, setParcela1Data] = useState('');
-    const [parcela2_data, setParcela2Data] = useState('');
-    const [numero_parcelas, setNumeroParcelas] = useState<number | ''>(2);
-    const [data_primeira_parcela, setDataPrimeiraParcela] = useState('');
+    const [titulo, setTitulo] = useState(''); // NOVO
+    const [tipo_emprestimo, setTipoEmprestimo] = useState(''); // Alterado de 'nome'
+    const [instituicao, setInstituicao] = useState('');
+    const [valor_original_str, setValorOriginalStr] = useState('');
+    const [taxa_juros, setTaxaJuros] = useState<number | ''>('');
+    const [numero_parcelas, setNumeroParcelas] = useState<number | ''>('');
+    const [data_contratacao, setDataContratacao] = useState('');
+    const [parcelas_pagas, setParcelasPagas] = useState<number | ''>(0);
+    const [calculationMode, setCalculationMode] = useState<'auto' | 'fixed'>('auto');
+    const [valor_parcela_fixo_str, setValorParcelaFixoStr] = useState('');
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    // --- LÓGICA ---
+    const [loanCategories, setLoanCategories] = useState<Categoria[]>([]);
 
     useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            const { data: clientsData } = await supabase.from('clientes').select('id, nome');
-            if (clientsData) setClients(clientsData as Client[]);
-
-            const { data: categoriesData } = await supabase.from('categorias').select('*').eq('tipo', 'projeto');
-            if (categoriesData) setProjectCategories(categoriesData);
-            setLoading(false);
+        const fetchCategories = async () => {
+            const { data } = await supabase.from('categorias').select('id, nome').eq('tipo', 'emprestimo');
+            if (data) setLoanCategories(data);
         };
-        fetchData();
-    }, [supabase]);
+        if (isOpen) fetchCategories();
+    }, [isOpen, supabase]);
+
+    useEffect(() => {
+        if (tipo_emprestimo === 'Financiamento Veículo') {
+            setCalculationMode('fixed');
+        } else {
+            setCalculationMode('auto');
+        }
+    }, [tipo_emprestimo]);
+
+    if (!isOpen) return null;
+    
+    const parseCurrency = (value: string): number => {
+        if (!value) return 0;
+        return parseFloat(value.replace(/\./g, '').replace(',', '.')) || 0;
+    };
+
+    const valor_original_num = parseCurrency(valor_original_str);
+    const valor_parcela_fixo_num = parseCurrency(valor_parcela_fixo_str);
+    const numero_parcelas_num = Number(numero_parcelas);
+
+    const valor_parcela_calculado = (calculationMode === 'auto' && numero_parcelas_num && valor_original_num) ? (valor_original_num / numero_parcelas_num) : valor_parcela_fixo_num;
+    const valor_total_calculado = (calculationMode === 'fixed' && numero_parcelas_num && valor_parcela_fixo_num) ? (valor_parcela_fixo_num * numero_parcelas_num) : valor_original_num;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setError(null);
 
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            setError("Você precisa estar logado para criar um projeto.");
-            setLoading(false);
-            return;
-        }
-        
-        const parcelas = [];
-        if (forma_pagamento === 'À Vista' && valor_total) {
-            parcelas.push({ valor: valor_total, data: parcela1_data, pago: entrada_recebida });
-        } else if (forma_pagamento === '50/50' && parcela1_valor && valor_total) {
-            parcelas.push({ valor: parcela1_valor, data: parcela1_data, pago: entrada_recebida });
-            parcelas.push({ valor: valor_total - parcela1_valor, data: parcela2_data, pago: false });
-        } else if (forma_pagamento === 'Parcelado' && numero_parcelas && valor_total && data_primeira_parcela) {
-            const valorParcela = valor_total / numero_parcelas;
-            for (let i = 0; i < numero_parcelas; i++) {
-                const dataParcela = new Date(data_primeira_parcela);
-                dataParcela.setMonth(dataParcela.getMonth() + i);
-                parcelas.push({ valor: valorParcela, data: dataParcela.toISOString().split('T')[0], pago: i === 0 ? entrada_recebida : false });
-            }
-        }
+        if (!user) return;
 
-        const detalhes_pagamento = {
-            tipo: forma_pagamento,
-            parcelas: parcelas,
-        };
-        
-        const status_pagamento = entrada_recebida ? (parcelas.every(p => p.pago) ? 'Totalmente pago' : 'Parcialmente pago') : 'Pendente';
-
-
-        const { error: insertError } = await supabase
-            .from('projetos')
+        const { data: emprestimoData, error: emprestimoError } = await supabase
+            .from('emprestimos')
             .insert({
                 user_id: user.id,
-                cliente_id,
-                descricao: nome_projeto,
-                observacao: descricao,
-                data_entrega,
-                status_entrega,
-                valor_total,
-                assinatura,
-                tipo_projeto,
-                detalhes_pagamento,
-                status_pagamento,
-            });
+                titulo: titulo || tipo_emprestimo, // Usa o título, ou o tipo como fallback
+                tipo_emprestimo,
+                instituicao,
+                valor_original: valor_total_calculado,
+                taxa_juros: Number(taxa_juros),
+                numero_parcelas: Number(numero_parcelas),
+                data_contratacao,
+            })
+            .select()
+            .single();
 
-        if (insertError) {
-            setError(`Erro ao salvar o projeto: ${insertError.message}`);
-            setLoading(false);
-        } else {
-            router.push('/dashboard/projects');
-            router.refresh();
-        }
+        // ... (resto da lógica de salvar parcelas)
     };
 
     return (
-        <div className="max-w-4xl mx-auto">
-            <div className="bg-light-secondary p-8 rounded-xl shadow-card">
-                <h1 className="text-2xl font-bold text-dark-text mb-8">Cadastrar Novo Projeto</h1>
-                <form onSubmit={handleSubmit} className="space-y-8">
-                    {/* Seção de Detalhes do Projeto */}
-                    <div className="space-y-6">
-                        <h2 className="text-lg font-semibold border-b border-light-tertiary pb-2">Detalhes do Projeto</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label htmlFor="nome_projeto" className="block text-sm font-medium text-gray-text mb-1">Nome do Projeto*</label>
-                                <input type="text" id="nome_projeto" value={nome_projeto} onChange={(e) => setNomeProjeto(e.target.value)} required className="w-full p-3 bg-gray-50 border border-light-tertiary rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green" />
-                            </div>
-                            <div>
-                                <label htmlFor="cliente_id" className="block text-sm font-medium text-gray-text mb-1">Cliente*</label>
-                                <select id="cliente_id" value={cliente_id} onChange={(e) => setClienteId(e.target.value)} required className="w-full p-3 bg-gray-50 border border-light-tertiary rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green">
-                                    <option value="" disabled>Selecione um cliente</option>
-                                    {clients.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label htmlFor="tipo_projeto" className="block text-sm font-medium text-gray-text mb-1">Tipo de Projeto*</label>
-                                <select id="tipo_projeto" value={tipo_projeto} onChange={(e) => setTipoProjeto(e.target.value)} required className="w-full p-3 bg-gray-50 border border-light-tertiary rounded-lg">
-                                    <option value="" disabled>Selecione um tipo</option>
-                                    {projectCategories.map(cat => (
-                                        <option key={cat.id} value={cat.nome}>{cat.nome}</option>
-                                    ))}
-                                </select>
-                            </div>
-                             <div>
-                                <label htmlFor="data_entrega" className="block text-sm font-medium text-gray-text mb-1">Previsão de Entrega*</label>
-                                <input type="date" id="data_entrega" value={data_entrega} onChange={(e) => setDataEntrega(e.target.value)} required className="w-full p-3 bg-gray-50 border border-light-tertiary rounded-lg" />
-                            </div>
-                            <div className="md:col-span-2">
-                                <label htmlFor="status_entrega" className="block text-sm font-medium text-gray-text mb-1">Status*</label>
-                                <select id="status_entrega" value={status_entrega} onChange={(e) => setStatusEntrega(e.target.value)} required className="w-full p-3 bg-gray-50 border border-light-tertiary rounded-lg">
-                                    <option>A fazer</option>
-                                    <option>Em andamento</option>
-                                    <option>Finalizado</option>
-                                </select>
-                            </div>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-light-secondary dark:bg-dark-secondary p-8 rounded-xl shadow-lg w-full max-w-lg">
+                <h2 className="text-xl font-bold mb-1">Cadastrar Novo Empréstimo</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="tipo_emprestimo" className="block text-sm font-medium text-gray-text mb-1">Tipo de Empréstimo*</label>
+                            <select id="tipo_emprestimo" value={tipo_emprestimo} onChange={(e) => setTipoEmprestimo(e.target.value)} required className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg">
+                                <option value="" disabled>Selecione o tipo</option>
+                                <option>Financiamento Veículo</option> {/* Opção Fixa */}
+                                {loanCategories.map(cat => (
+                                    <option key={cat.id} value={cat.nome}>{cat.nome}</option>
+                                ))}
+                            </select>
                         </div>
                         <div>
-                            <label htmlFor="descricao" className="block text-sm font-medium text-gray-text mb-1">Descrição do Projeto</label>
-                            <textarea id="descricao" value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={4} className="w-full p-3 bg-gray-50 border border-light-tertiary rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green" />
+                            <label htmlFor="titulo" className="block text-sm font-medium text-gray-text mb-1">Título (opcional)</label>
+                            <input type="text" id="titulo" value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Ex: Carro da Empresa" className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg" />
                         </div>
+                        {/* ... (resto do formulário) ... */}
                     </div>
-
-                    {/* Seção de Pagamento */}
-                    <div className="space-y-6">
-                        <h2 className="text-lg font-semibold border-b border-light-tertiary pb-2">Detalhes Financeiros</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                               <label htmlFor="valor_total" className="block text-sm font-medium text-gray-text mb-1">Valor Total do Projeto (R$)*</label>
-                               <input type="number" id="valor_total" value={valor_total} onChange={(e) => setValorTotal(Number(e.target.value))} required className="w-full p-3 bg-gray-50 border border-light-tertiary rounded-lg" />
-                            </div>
-                            <div>
-                                <label htmlFor="forma_pagamento" className="block text-sm font-medium text-gray-text mb-1">Forma de Pagamento</label>
-                                <select id="forma_pagamento" value={forma_pagamento} onChange={(e) => setFormaPagamento(e.target.value)} className="w-full p-3 bg-gray-50 border border-light-tertiary rounded-lg">
-                                    <option>À Vista</option>
-                                    <option>50/50</option>
-                                    <option>Parcelado</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        {forma_pagamento === 'À Vista' && (
-                            <div>
-                                <label htmlFor="parcela1_data" className="block text-sm font-medium text-gray-text mb-1">Data do Pagamento*</label>
-                                <input type="date" id="parcela1_data" value={parcela1_data} onChange={(e) => setParcela1Data(e.target.value)} required className="w-full md:w-1/2 p-3 bg-gray-50 border rounded-lg" />
-                            </div>
-                        )}
-                        {forma_pagamento === '50/50' && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label htmlFor="parcela1_valor" className="block text-sm font-medium text-gray-text mb-1">Valor da 1ª Parcela (50%)*</label>
-                                    <input type="number" id="parcela1_valor" value={parcela1_valor} onChange={(e) => setParcela1Valor(Number(e.target.value))} required className="w-full p-3 bg-gray-50 border rounded-lg" />
-                                </div>
-                                <div>
-                                    <label htmlFor="parcela1_data" className="block text-sm font-medium text-gray-text mb-1">Data da 1ª Parcela*</label>
-                                    <input type="date" id="parcela1_data" value={parcela1_data} onChange={(e) => setParcela1Data(e.target.value)} required className="w-full p-3 bg-gray-50 border rounded-lg" />
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label htmlFor="parcela2_data" className="block text-sm font-medium text-gray-text mb-1">Data Prevista da 2ª Parcela*</label>
-                                    <input type="date" id="parcela2_data" value={parcela2_data} onChange={(e) => setParcela2Data(e.target.value)} required className="w-full p-3 bg-gray-50 border rounded-lg" />
-                                </div>
-                            </div>
-                        )}
-                        {forma_pagamento === 'Parcelado' && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label htmlFor="numero_parcelas" className="block text-sm font-medium text-gray-text mb-1">Número de Parcelas*</label>
-                                    <input type="number" id="numero_parcelas" value={numero_parcelas} onChange={(e) => setNumeroParcelas(Number(e.target.value))} required min="2" className="w-full p-3 bg-gray-50 border rounded-lg" />
-                                </div>
-                                <div>
-                                    <label htmlFor="data_primeira_parcela" className="block text-sm font-medium text-gray-text mb-1">Data da 1ª Parcela*</label>
-                                    <input type="date" id="data_primeira_parcela" value={data_primeira_parcela} onChange={(e) => setDataPrimeiraParcela(e.target.value)} required className="w-full p-3 bg-gray-50 border rounded-lg" />
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="space-y-4 pt-4 border-t border-light-tertiary">
-                        <div className="flex items-center gap-3">
-                            <input type="checkbox" id="entrada_recebida" checked={entrada_recebida} onChange={(e) => setEntradaRecebida(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-brand-green focus:ring-brand-green" />
-                            <label htmlFor="entrada_recebida" className="text-sm font-medium text-gray-text">Você recebeu a entrada/primeira parcela?</label>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <input type="checkbox" id="assinatura" checked={assinatura} onChange={(e) => setAssinatura(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-brand-green focus:ring-brand-green" />
-                            <label htmlFor="assinatura" className="text-sm font-medium text-gray-text">Este projeto é uma assinatura recorrente?</label>
-                        </div>
-                    </div>
-
-                    {error && <p className="text-sm text-danger-text mt-4">{error}</p>}
-
-                    <div className="flex justify-end gap-4 pt-4">
-                         <button type="button" onClick={() => router.back()} className="bg-light-secondary hover:bg-light-tertiary text-dark-text font-semibold py-2 px-6 rounded-lg border border-light-tertiary">
-                            Cancelar
-                         </button>
-                         <button type="submit" disabled={loading} className="bg-brand-green hover:bg-brand-green/90 text-white font-semibold py-2 px-6 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed">
-                            {loading ? 'Salvando...' : 'Salvar Projeto'}
-                         </button>
-                    </div>
+                    {/* ... (botões) ... */}
                 </form>
             </div>
         </div>
     );
 }
+
+// --- PÁGINA PRINCIPAL ---
+export default function LoansPage() {
+    // ... (código da página principal permanece o mesmo)
+}
+
+// O código dos componentes StatCard, LoanListItem e da página principal foi omitido por brevidade,
+// mas deve permanecer no seu ficheiro. As alterações principais estão no componente LoanModal.
