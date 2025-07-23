@@ -31,7 +31,7 @@ const navItems: NavItem[] = [
           { href: '/dashboard/financeiro/visao-geral', text: 'Visão Geral', icon: BarChart3 },
           { href: '/dashboard/financeiro/bancos', text: 'Bancos', icon: Landmark },
           { href: '/dashboard/financeiro/fluxo-de-caixa', text: 'Fluxo de Caixa', icon: ArrowRightLeft },
-          { href: '#', text: 'Empréstimos', icon: HandCoins },
+          { href: '/dashboard/financeiro/emprestimos', text: 'Empréstimos', icon: HandCoins },
           { href: '#', text: 'Fornecedores', icon: Building2 },
           { href: '#', text: 'Assinaturas', icon: Repeat },
       ]
