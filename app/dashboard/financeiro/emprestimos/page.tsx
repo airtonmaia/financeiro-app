@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
-import { Plus, DollarSign, TrendingUp, TrendingDown, Calendar } from 'lucide-react';
+import { Plus, DollarSign, TrendingUp, TrendingDown, Calendar, Trash2 } from 'lucide-react';
 
 // --- TIPOS ---
 type Emprestimo = {
@@ -41,7 +41,7 @@ function StatCard({ title, value, colorClass }: { title: string; value: string; 
     );
 }
 
-function LoanListItem({ loan }: { loan: EmprestimoDetalhado }) {
+function LoanListItem({ loan, onDelete }: { loan: EmprestimoDetalhado, onDelete: (id: string) => void }) {
     const saldoDevedor = loan.valor_original - loan.total_pago;
     
     return (
@@ -82,14 +82,15 @@ function LoanListItem({ loan }: { loan: EmprestimoDetalhado }) {
                 <div>
                     <p className="text-xs text-gray-text">Próxima Parcela</p>
                     <p className="font-semibold">N/A</p>
-                    <p className="text-xs text-gray-text">
-                        Venc: N/A
-                    </p>
+                    <p className="text-xs text-gray-text">Venc: N/A</p>
                 </div>
             </div>
             <div className="flex justify-end gap-2">
                 <button className="text-sm bg-gray-100 dark:bg-dark-tertiary hover:bg-gray-200 font-semibold py-2 px-4 rounded-lg">Ver Detalhes</button>
                 <button className="text-sm bg-brand-green text-white font-semibold py-2 px-4 rounded-lg">Pagar Parcela</button>
+                <button onClick={() => onDelete(loan.id)} className="text-sm bg-red-100 text-danger-text hover:bg-red-200 font-semibold p-2 rounded-lg">
+                    <Trash2 className="w-4 h-4" />
+                </button>
             </div>
         </div>
     );
@@ -283,6 +284,17 @@ export default function LoansPage() {
         fetchLoans();
     }, [fetchLoans]);
 
+    const handleDeleteLoan = async (id: string) => {
+        if (window.confirm("Tem certeza que deseja excluir este empréstimo? Todas as parcelas e transações associadas serão apagadas permanentemente.")) {
+            const { error } = await supabase.from('emprestimos').delete().eq('id', id);
+            if (error) {
+                alert("Erro ao excluir empréstimo: " + error.message);
+            } else {
+                fetchLoans();
+            }
+        }
+    };
+
     const totalEmprestado = loans.reduce((sum, loan) => sum + loan.valor_original, 0);
     const totalPago = loans.reduce((sum, loan) => sum + loan.total_pago, 0);
     const saldoDevedor = totalEmprestado - totalPago;
@@ -313,7 +325,7 @@ export default function LoansPage() {
                 ) : (
                     <div className="space-y-6">
                         {loans.length > 0 ? loans.map(loan => (
-                            <LoanListItem key={loan.id} loan={loan} />
+                            <LoanListItem key={loan.id} loan={loan} onDelete={handleDeleteLoan} />
                         )) : <p className="text-gray-text">Nenhum empréstimo cadastrado.</p>}
                     </div>
                 )}
