@@ -22,6 +22,8 @@ type Categoria = { id: string; nome: string; };
 type EmprestimoDetalhado = Emprestimo & {
     total_pago: number;
     parcelas_pagas: number;
+    proxima_parcela_valor: number | null;
+    proxima_parcela_vencimento: string | null;
 };
 
 // --- FUNÇÕES UTILITÁRIAS ---
@@ -81,8 +83,10 @@ function LoanListItem({ loan, onDelete }: { loan: EmprestimoDetalhado, onDelete:
                 </div>
                 <div>
                     <p className="text-xs text-gray-text">Próxima Parcela</p>
-                    <p className="font-semibold">N/A</p>
-                    <p className="text-xs text-gray-text">Venc: N/A</p>
+                    <p className="font-semibold">{formatCurrency(loan.proxima_parcela_valor)}</p>
+                    <p className="text-xs text-gray-text">
+                        Venc: {loan.proxima_parcela_vencimento ? new Date(loan.proxima_parcela_vencimento).toLocaleDateString() : 'Quitado'}
+                    </p>
                 </div>
             </div>
             <div className="flex justify-end gap-2">
@@ -103,8 +107,9 @@ function LoanModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () =
     const [tipo_emprestimo, setTipoEmprestimo] = useState('');
     const [instituicao, setInstituicao] = useState('');
     const [numero_parcelas, setNumeroParcelas] = useState<number | ''>('');
-    const [data_contratacao, setDataContratacao] = useState('');
-    const [parcelas_pagas, setParcelasPagas] = useState<number | ''>(0);
+    // AJUSTE: Renomeando campos para maior clareza
+    const [proximo_vencimento, setProximoVencimento] = useState('');
+    const [proxima_parcela_numero, setProximaParcelaNumero] = useState<number | ''>(1);
     
     const [valor_original_str, setValorOriginalStr] = useState('');
     const [valor_parcela_fixo_str, setValorParcelaFixoStr] = useState('');
@@ -152,7 +157,12 @@ function LoanModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () =
                 valor_original: valor_total_calculado,
                 taxa_juros: null,
                 numero_parcelas: Number(numero_parcelas),
-                data_contratacao,
+                // AJUSTE: Usando o próximo vencimento para calcular a data de contratação "retroativamente"
+                data_contratacao: (() => {
+                    const dataVenc = new Date(proximo_vencimento);
+                    dataVenc.setMonth(dataVenc.getMonth() - Number(proxima_parcela_numero));
+                    return dataVenc.toISOString().split('T')[0];
+                })(),
             })
             .select()
             .single();
@@ -163,11 +173,15 @@ function LoanModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () =
             return;
         }
 
+        // AJUSTE: Lógica de geração de parcelas corrigida
         const parcelasParaInserir = [];
+        const numeroProximaParcela = Number(proxima_parcela_numero) || 1;
         for (let i = 1; i <= Number(numero_parcelas); i++) {
-            const dataVencimento = new Date(data_contratacao);
-            dataVencimento.setMonth(dataVencimento.getMonth() + i);
-            const isPaga = i <= Number(parcelas_pagas);
+            const dataVencimento = new Date(proximo_vencimento);
+            dataVencimento.setMonth(dataVencimento.getMonth() + (i - numeroProximaParcela));
+            
+            const isPaga = i < numeroProximaParcela;
+
             parcelasParaInserir.push({
                 emprestimo_id: emprestimoData.id,
                 user_id: user.id,
@@ -231,8 +245,14 @@ function LoanModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () =
                             <label htmlFor="valor_parcela" className="block text-sm font-medium text-gray-text mb-1">Valor da Parcela</label>
                             <input type="text" id="valor_parcela" value={calculationMode === 'auto' ? formatCurrency(valor_parcela_calculado) : valor_parcela_fixo_str} onChange={(e) => setValorParcelaFixoStr(e.target.value)} readOnly={calculationMode === 'auto'} className={`w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg ${calculationMode === 'auto' && 'bg-gray-200 dark:bg-dark-tertiary/50'}`} />
                         </div>
-                        <div className="md:col-span-2"><label htmlFor="data_contratacao" className="block text-sm font-medium text-gray-text mb-1">Data de Contratação / 1º Vencimento*</label><input type="date" id="data_contratacao" value={data_contratacao} onChange={(e) => setDataContratacao(e.target.value)} required className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg" /></div>
-                        <div className="md:col-span-2"><label htmlFor="parcelas_pagas" className="block text-sm font-medium text-gray-text mb-1">Parcelas já pagas (se aplicável)</label><input type="number" id="parcelas_pagas" value={parcelas_pagas} onChange={(e) => setParcelasPagas(Number(e.target.value))} className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg" /></div>
+                        <div>
+                            <label htmlFor="proxima_parcela_numero" className="block text-sm font-medium text-gray-text mb-1">Número da Próxima Parcela*</label>
+                            <input type="number" id="proxima_parcela_numero" value={proxima_parcela_numero} onChange={(e) => setProximaParcelaNumero(Number(e.target.value))} required className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg" />
+                        </div>
+                        <div>
+                            <label htmlFor="proximo_vencimento" className="block text-sm font-medium text-gray-text mb-1">Próximo Vencimento*</label>
+                            <input type="date" id="proximo_vencimento" value={proximo_vencimento} onChange={(e) => setProximoVencimento(e.target.value)} required className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg" />
+                        </div>
                     </div>
                     <div className="flex justify-end gap-4 pt-4">
                         <button type="button" onClick={onClose} className="bg-gray-200 dark:bg-dark-tertiary font-semibold py-2 px-6 rounded-lg">Cancelar</button>
