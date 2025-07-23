@@ -78,6 +78,10 @@ function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClos
     const [cliente_id, setClienteId] = useState<string | null>(null);
     const [projeto_id, setProjetoId] = useState<string | null>(null);
     const [status, setStatus] = useState<'Pago' | 'Pendente' | 'Atrasado'>('Pendente');
+    
+    // NOVOS ESTADOS para recorrência
+    const [recorrente, setRecorrente] = useState(false);
+    const [frequencia, setFrequencia] = useState('Mensal');
 
     const [clients, setClients] = useState<Client[]>([]);
     const [projects, setProjects] = useState<Project[]>([]);
@@ -105,7 +109,7 @@ function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClos
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave({ descricao, tipo, categoria, valor: Number(valor), data, cliente_id, projeto_id, status });
+        onSave({ descricao, tipo, categoria, valor: Number(valor), data, cliente_id, projeto_id, status, recorrente, frequencia });
     };
     
     const currentCategories = tipo === 'Receita' ? incomeCategories : expenseCategories;
@@ -118,13 +122,7 @@ function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClos
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="md:col-span-2"><label htmlFor="descricao" className="block text-sm font-medium text-gray-text mb-1">Descrição*</label><input type="text" id="descricao" value={descricao} onChange={(e) => setDescricao(e.target.value)} required className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg" /></div>
-                        <div>
-                            <label htmlFor="tipo" className="block text-sm font-medium text-gray-text mb-1">Tipo*</label>
-                            <select id="tipo" value={tipo} onChange={(e) => setTipo(e.target.value as any)} className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg">
-                                <option>Receita</option>
-                                <option>Despesa</option>
-                            </select>
-                        </div>
+                        <div><label htmlFor="tipo" className="block text-sm font-medium text-gray-text mb-1">Tipo*</label><select id="tipo" value={tipo} onChange={(e) => setTipo(e.target.value as any)} className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg"><option>Receita</option><option>Despesa</option></select></div>
                         <div>
                             <label htmlFor="categoria" className="block text-sm font-medium text-gray-text mb-1">Categoria*</label>
                             <select id="categoria" value={categoria} onChange={(e) => setCategoria(e.target.value)} required className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg">
@@ -139,6 +137,26 @@ function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClos
                         <div><label htmlFor="cliente" className="block text-sm font-medium text-gray-text mb-1">Cliente</label><select id="cliente" value={cliente_id || ''} onChange={(e) => setClienteId(e.target.value)} className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg"><option value="">Nenhum</option>{clients.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}</select></div>
                         <div><label htmlFor="projeto" className="block text-sm font-medium text-gray-text mb-1">Projeto</label><select id="projeto" value={projeto_id || ''} onChange={(e) => setProjetoId(e.target.value)} className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg"><option value="">Nenhum</option>{projects.map(p => <option key={p.id} value={p.id}>{p.descricao}</option>)}</select></div>
                         <div className="md:col-span-2"><label htmlFor="status" className="block text-sm font-medium text-gray-text mb-1">Status*</label><select id="status" value={status} onChange={(e) => setStatus(e.target.value as any)} className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg"><option>Pendente</option><option>Pago</option><option>Atrasado</option></select></div>
+                        
+                        {/* NOVOS CAMPOS PARA RECORRÊNCIA */}
+                        <div className="md:col-span-2 space-y-2 border-t pt-4">
+                            <div className="flex items-center gap-3">
+                                <input type="checkbox" id="recorrente" checked={recorrente} onChange={(e) => setRecorrente(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-brand-green focus:ring-brand-green" />
+                                <label htmlFor="recorrente" className="text-sm font-medium text-gray-text">Esta é uma despesa recorrente?</label>
+                            </div>
+                            {recorrente && (
+                                <div>
+                                    <label htmlFor="frequencia" className="block text-sm font-medium text-gray-text mb-1">Frequência*</label>
+                                    <select id="frequencia" value={frequencia} onChange={(e) => setFrequencia(e.target.value)} required className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg">
+                                        <option>Mensal</option>
+                                        <option>Bimestral</option>
+                                        <option>Trimestral</option>
+                                        <option>Semestral</option>
+                                        <option>Anual</option>
+                                    </select>
+                                </div>
+                            )}
+                        </div>
                     </div>
                     <div className="flex justify-end gap-4 pt-4"><button type="button" onClick={onClose} className="bg-gray-200 dark:bg-dark-tertiary font-semibold py-2 px-6 rounded-lg">Cancelar</button><button type="submit" className="bg-brand-blue text-white font-semibold py-2 px-6 rounded-lg">Adicionar Transação</button></div>
                 </form>
@@ -194,7 +212,6 @@ export default function CashFlowPage() {
         await supabase.from('transacoes').update({ status: newStatus }).eq('id', id);
     };
 
-    // AJUSTE: Lógica dos indicadores atualizada
     const receitaRecebida = filteredTransactions.filter(t => t.tipo === 'Receita' && t.status === 'Pago').reduce((sum, t) => sum + t.valor, 0);
     const despesaPaga = filteredTransactions.filter(t => t.tipo === 'Despesa' && t.status === 'Pago').reduce((sum, t) => sum + t.valor, 0);
     const saldoAtual = receitaRecebida - despesaPaga;
