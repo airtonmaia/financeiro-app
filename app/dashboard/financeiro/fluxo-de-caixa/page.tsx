@@ -137,12 +137,10 @@ function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClos
                         <div><label htmlFor="projeto" className="block text-sm font-medium text-gray-text mb-1">Projeto</label><select id="projeto" value={projeto_id || ''} onChange={(e) => setProjetoId(e.target.value)} className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg"><option value="">Nenhum</option>{projects.map(p => <option key={p.id} value={p.id}>{p.descricao}</option>)}</select></div>
                         <div className="md:col-span-2"><label htmlFor="status" className="block text-sm font-medium text-gray-text mb-1">Status*</label><select id="status" value={status} onChange={(e) => setStatus(e.target.value as any)} className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg"><option>Pendente</option><option>Pago</option><option>Atrasado</option></select></div>
                         
-                        {/* AJUSTE: Opção de recorrência agora é condicional */}
                         {tipo === 'Despesa' && (
                             <div className="md:col-span-2 space-y-3 border-t pt-4">
                                 <div className="flex items-center justify-between">
                                     <label htmlFor="recorrente" className="text-sm font-medium text-gray-text">Esta é uma despesa recorrente?</label>
-                                    {/* AJUSTE: Trocando checkbox por componente de toggle */}
                                     <button
                                       type="button"
                                       onClick={() => setRecorrente(!recorrente)}
@@ -183,7 +181,14 @@ export default function CashFlowPage() {
     const supabase = createSupabaseBrowserClient();
     const [activeTab, setActiveTab] = useState<'Todas' | 'Entradas' | 'Saídas'>('Todas');
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedMonth, setSelectedMonth] = useState('');
+    
+    // AJUSTE: Inicializa o estado do mês com o mês atual
+    const [selectedMonth, setSelectedMonth] = useState(() => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        return `${year}-${month}`;
+    });
 
     const fetchTransactions = useCallback(async () => {
         setLoading(true);
@@ -200,6 +205,7 @@ export default function CashFlowPage() {
         return transactions.filter(t => {
             const tabFilter = activeTab === 'Todas' || (activeTab === 'Entradas' && t.tipo === 'Receita') || (activeTab === 'Saídas' && t.tipo === 'Despesa');
             const searchFilter = t.descricao.toLowerCase().includes(searchTerm.toLowerCase());
+            // AJUSTE: O filtro de mês agora funciona por padrão com o mês atual
             const monthFilter = !selectedMonth || t.data.startsWith(selectedMonth);
             return tabFilter && searchFilter && monthFilter;
         });
