@@ -79,7 +79,6 @@ function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClos
     const [projeto_id, setProjetoId] = useState<string | null>(null);
     const [status, setStatus] = useState<'Pago' | 'Pendente' | 'Atrasado'>('Pendente');
     
-    // NOVOS ESTADOS para recorrência
     const [recorrente, setRecorrente] = useState(false);
     const [frequencia, setFrequencia] = useState('Mensal');
 
@@ -138,7 +137,6 @@ function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClos
                         <div><label htmlFor="projeto" className="block text-sm font-medium text-gray-text mb-1">Projeto</label><select id="projeto" value={projeto_id || ''} onChange={(e) => setProjetoId(e.target.value)} className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg"><option value="">Nenhum</option>{projects.map(p => <option key={p.id} value={p.id}>{p.descricao}</option>)}</select></div>
                         <div className="md:col-span-2"><label htmlFor="status" className="block text-sm font-medium text-gray-text mb-1">Status*</label><select id="status" value={status} onChange={(e) => setStatus(e.target.value as any)} className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg"><option>Pendente</option><option>Pago</option><option>Atrasado</option></select></div>
                         
-                        {/* NOVOS CAMPOS PARA RECORRÊNCIA */}
                         <div className="md:col-span-2 space-y-2 border-t pt-4">
                             <div className="flex items-center gap-3">
                                 <input type="checkbox" id="recorrente" checked={recorrente} onChange={(e) => setRecorrente(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-brand-green focus:ring-brand-green" />
