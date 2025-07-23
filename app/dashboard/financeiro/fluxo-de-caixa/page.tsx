@@ -137,24 +137,36 @@ function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClos
                         <div><label htmlFor="projeto" className="block text-sm font-medium text-gray-text mb-1">Projeto</label><select id="projeto" value={projeto_id || ''} onChange={(e) => setProjetoId(e.target.value)} className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg"><option value="">Nenhum</option>{projects.map(p => <option key={p.id} value={p.id}>{p.descricao}</option>)}</select></div>
                         <div className="md:col-span-2"><label htmlFor="status" className="block text-sm font-medium text-gray-text mb-1">Status*</label><select id="status" value={status} onChange={(e) => setStatus(e.target.value as any)} className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg"><option>Pendente</option><option>Pago</option><option>Atrasado</option></select></div>
                         
-                        <div className="md:col-span-2 space-y-2 border-t pt-4">
-                            <div className="flex items-center gap-3">
-                                <input type="checkbox" id="recorrente" checked={recorrente} onChange={(e) => setRecorrente(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-brand-green focus:ring-brand-green" />
-                                <label htmlFor="recorrente" className="text-sm font-medium text-gray-text">Esta é uma despesa recorrente?</label>
-                            </div>
-                            {recorrente && (
-                                <div>
-                                    <label htmlFor="frequencia" className="block text-sm font-medium text-gray-text mb-1">Frequência*</label>
-                                    <select id="frequencia" value={frequencia} onChange={(e) => setFrequencia(e.target.value)} required className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg">
-                                        <option>Mensal</option>
-                                        <option>Bimestral</option>
-                                        <option>Trimestral</option>
-                                        <option>Semestral</option>
-                                        <option>Anual</option>
-                                    </select>
+                        {/* AJUSTE: Opção de recorrência agora é condicional */}
+                        {tipo === 'Despesa' && (
+                            <div className="md:col-span-2 space-y-3 border-t pt-4">
+                                <div className="flex items-center justify-between">
+                                    <label htmlFor="recorrente" className="text-sm font-medium text-gray-text">Esta é uma despesa recorrente?</label>
+                                    {/* AJUSTE: Trocando checkbox por componente de toggle */}
+                                    <button
+                                      type="button"
+                                      onClick={() => setRecorrente(!recorrente)}
+                                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ease-in-out ${recorrente ? 'bg-brand-green' : 'bg-gray-300 dark:bg-dark-tertiary'}`}
+                                    >
+                                      <span className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${recorrente ? 'translate-x-6' : ''}`}>
+                                        {recorrente && <Check className="w-3 h-3 text-brand-green translate-x-0.5 translate-y-0.5" />}
+                                      </span>
+                                    </button>
                                 </div>
-                            )}
-                        </div>
+                                {recorrente && (
+                                    <div>
+                                        <label htmlFor="frequencia" className="block text-sm font-medium text-gray-text mb-1">Frequência*</label>
+                                        <select id="frequencia" value={frequencia} onChange={(e) => setFrequencia(e.target.value)} required className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg">
+                                            <option>Mensal</option>
+                                            <option>Bimestral</option>
+                                            <option>Trimestral</option>
+                                            <option>Semestral</option>
+                                            <option>Anual</option>
+                                        </select>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                     <div className="flex justify-end gap-4 pt-4"><button type="button" onClick={onClose} className="bg-gray-200 dark:bg-dark-tertiary font-semibold py-2 px-6 rounded-lg">Cancelar</button><button type="submit" className="bg-brand-blue text-white font-semibold py-2 px-6 rounded-lg">Adicionar Transação</button></div>
                 </form>
