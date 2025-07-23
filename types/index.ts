@@ -34,6 +34,7 @@ export type Project = {
     parcelas: Parcela[];
   } | null;
   status_pagamento: string;
+  anotacoes?: string | null;
   clientes: { 
     nome: string;
   } | null;
@@ -48,7 +49,7 @@ export type Subtask = {
   created_at: string;
 };
 
-// NOVO: Tipo para Transações
+// ATUALIZAÇÃO: Adicionados campos para recorrência
 export type Transacao = {
     id: string;
     descricao: string;
@@ -59,7 +60,8 @@ export type Transacao = {
     categoria: string;
     projeto_id: string | null;
     cliente_id: string | null;
-    // Campos opcionais que vêm das relações (joins)
+    recorrente?: boolean;
+    frequencia?: string;
     projetos?: { descricao: string } | null;
     clientes?: { nome: string } | null;
 };
