@@ -18,9 +18,7 @@ type Emprestimo = {
     numero_parcelas: number;
     status: string;
 };
-
 type Categoria = { id: string; nome: string; };
-
 type EmprestimoDetalhado = Emprestimo & {
     total_pago: number;
     parcelas_pagas: number;
@@ -102,7 +100,6 @@ function LoanModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () =
     const [titulo, setTitulo] = useState('');
     const [tipo_emprestimo, setTipoEmprestimo] = useState('');
     const [instituicao, setInstituicao] = useState('');
-    const [taxa_juros, setTaxaJuros] = useState<number | ''>('');
     const [numero_parcelas, setNumeroParcelas] = useState<number | ''>('');
     const [data_contratacao, setDataContratacao] = useState('');
     const [parcelas_pagas, setParcelasPagas] = useState<number | ''>(0);
@@ -121,14 +118,6 @@ function LoanModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () =
         };
         if (isOpen) fetchCategories();
     }, [isOpen, supabase]);
-
-    useEffect(() => {
-        if (tipo_emprestimo === 'Financiamento Veículo') {
-            setCalculationMode('fixed');
-        } else {
-            setCalculationMode('auto');
-        }
-    }, [tipo_emprestimo]);
 
     if (!isOpen) return null;
     
@@ -159,7 +148,7 @@ function LoanModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () =
                 tipo_emprestimo,
                 instituicao,
                 valor_original: valor_total_calculado,
-                taxa_juros: Number(taxa_juros),
+                taxa_juros: null, // Campo removido
                 numero_parcelas: Number(numero_parcelas),
                 data_contratacao,
             })
@@ -210,7 +199,6 @@ function LoanModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () =
                             <label htmlFor="tipo_emprestimo" className="block text-sm font-medium text-gray-text mb-1">Tipo de Empréstimo*</label>
                             <select id="tipo_emprestimo" value={tipo_emprestimo} onChange={(e) => setTipoEmprestimo(e.target.value)} required className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg">
                                 <option value="" disabled>Selecione o tipo</option>
-                                <option>Financiamento Veículo</option>
                                 {loanCategories.map(cat => (
                                     <option key={cat.id} value={cat.nome}>{cat.nome}</option>
                                 ))}
@@ -221,23 +209,23 @@ function LoanModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () =
                             <input type="text" id="titulo" value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Ex: Carro da Empresa" className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg" />
                         </div>
                         
-                        {tipo_emprestimo !== 'Financiamento Veículo' && (
-                            <div className="md:col-span-2">
-                                <label htmlFor="calculationMode" className="block text-sm font-medium text-gray-text mb-1">Como calcular?*</label>
-                                <select id="calculationMode" value={calculationMode} onChange={(e) => setCalculationMode(e.target.value as any)} className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg">
-                                    <option value="auto">Dividir Valor Total</option>
-                                    <option value="fixed">Informar Valor da Parcela</option>
-                                </select>
-                            </div>
-                        )}
+                        <div className="md:col-span-2">
+                            <label htmlFor="calculationMode" className="block text-sm font-medium text-gray-text mb-1">Como calcular?*</label>
+                            <select id="calculationMode" value={calculationMode} onChange={(e) => setCalculationMode(e.target.value as any)} className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg">
+                                <option value="auto">Dividir Valor Total</option>
+                                <option value="fixed">Informar Valor da Parcela</option>
+                            </select>
+                        </div>
 
                         <div>
                             <label htmlFor="valor_total" className="block text-sm font-medium text-gray-text mb-1">Valor Total*</label>
                             <input type="text" id="valor_total" value={calculationMode === 'fixed' ? formatCurrency(valor_total_calculado) : valor_original_str} onChange={(e) => setValorOriginalStr(e.target.value)} required readOnly={calculationMode === 'fixed'} className={`w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg ${calculationMode === 'fixed' && 'bg-gray-200 dark:bg-dark-tertiary/50'}`} />
                         </div>
-                        <div><label htmlFor="taxa_juros" className="block text-sm font-medium text-gray-text mb-1">Taxa de Juros (% a.m.)</label><input type="number" step="0.01" id="taxa_juros" value={taxa_juros} onChange={(e) => setTaxaJuros(Number(e.target.value))} className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg" /></div>
-                        <div><label htmlFor="numero_parcelas" className="block text-sm font-medium text-gray-text mb-1">Número de Parcelas*</label><input type="number" id="numero_parcelas" value={numero_parcelas} onChange={(e) => setNumeroParcelas(Number(e.target.value))} required className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg" /></div>
                         <div>
+                            <label htmlFor="numero_parcelas" className="block text-sm font-medium text-gray-text mb-1">Número de Parcelas*</label>
+                            <input type="number" id="numero_parcelas" value={numero_parcelas} onChange={(e) => setNumeroParcelas(Number(e.target.value))} required className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg" />
+                        </div>
+                        <div className="md:col-span-2">
                             <label htmlFor="valor_parcela" className="block text-sm font-medium text-gray-text mb-1">Valor da Parcela</label>
                             <input type="text" id="valor_parcela" value={calculationMode === 'auto' ? formatCurrency(valor_parcela_calculado) : valor_parcela_fixo_str} onChange={(e) => setValorParcelaFixoStr(e.target.value)} readOnly={calculationMode === 'auto'} className={`w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg ${calculationMode === 'auto' && 'bg-gray-200 dark:bg-dark-tertiary/50'}`} />
                         </div>
