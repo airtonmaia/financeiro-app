@@ -1,8 +1,9 @@
 // tailwind.config.js
 
+const { fontFamily } = require('tailwindcss/defaultTheme');
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  // ADIÇÃO: Habilita o dark mode baseado numa classe no elemento <html>
   darkMode: 'class',
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -11,10 +12,15 @@ module.exports = {
   ],
   theme: {
     extend: {
+      // ADIÇÃO: Configurando a nova fonte padrão
+      fontFamily: {
+        sans: ['var(--font-source-sans)', ...fontFamily.sans],
+      },
       colors: {
-        // Cores do Design Final
+        // AJUSTE: Nova cor primária
+        'brand-primary': '#696fff',
         'brand-green': '#19B884',
-        'brand-blue': '#007BFF',
+        'brand-blue': '#007BFF', // Mantido para referência, mas use brand-primary
         
         // Cores do Light Mode
         'light-primary': '#F7F8FC',
@@ -25,7 +31,7 @@ module.exports = {
         'danger-text': '#DC3545',
         'success-text': '#19B884',
 
-        // ADIÇÃO: Cores para o Dark Mode
+        // Cores para o Dark Mode
         'dark-primary': '#121212',
         'dark-secondary': '#1E1E1E',
         'dark-tertiary': '#2C2C2C',
