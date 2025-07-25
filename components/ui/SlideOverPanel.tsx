@@ -24,7 +24,7 @@ export default function SlideOverPanel({ isOpen, onClose, title, children }: Sli
             ></div>
 
             {/* Painel de Conteúdo */}
-            <div className="absolute top-0 right-0 h-full w-full max-w-lg bg-light-secondary dark:bg-dark-secondary shadow-xl flex flex-col">
+            <div className="absolute top-0 right-0 h-full w-full max-w-lg bg-card dark:bg-dark-secondary shadow-xl flex flex-col">
                 {/* Cabeçalho do Painel */}
                 <div className="flex justify-between items-center p-6 border-b border-light-tertiary dark:border-dark-tertiary">
                     <h2 className="text-xl font-bold">{title}</h2>

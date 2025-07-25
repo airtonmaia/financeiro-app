@@ -25,7 +25,7 @@ function ProjectCard({ project, index, statusColor }: { project: Project & { sub
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
-                    className="bg-light-secondary dark:bg-dark-secondary rounded-xl shadow-card p-4 space-y-3"
+                    className="bg-card dark:bg-dark-secondary rounded-xl shadow-card p-4 space-y-3"
                 >
                     <div className="flex justify-between items-center">
                         <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ backgroundColor: `${statusColor}20`, color: statusColor }}>
@@ -120,7 +120,7 @@ function StatusManagerModal({ isOpen, onClose, initialStatuses, folderId, onStat
 
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-            <div className="bg-light-secondary dark:bg-dark-secondary p-8 rounded-xl shadow-lg w-full max-w-md">
+            <div className="bg-card dark:bg-dark-secondary p-8 rounded-xl shadow-lg w-full max-w-md">
                 <h2 className="text-xl font-bold mb-6">Personalizar Colunas do Quadro</h2>
                 <DragDropContext onDragEnd={onDragEnd}>
                     <Droppable droppableId="statuses">
@@ -257,7 +257,7 @@ export default function ProjectBoardPage() {
           </div>
       </div>
       
-      <div className="bg-light-secondary dark:bg-dark-secondary rounded-xl shadow-card">
+      <div className="bg-card dark:bg-dark-secondary rounded-xl shadow-card">
         {loading && <p className="p-5 text-center text-gray-text">A carregar projetos...</p>}
         
         {!loading && viewMode === 'kanban' && (

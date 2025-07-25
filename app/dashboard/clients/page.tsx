@@ -23,7 +23,7 @@ export type Client = {
 
 function ClientStatCard({ title, value, description, icon: Icon }: { title: string; value: string; description: string; icon: React.ElementType; }) {
     return (
-        <div className="bg-light-secondary p-5 rounded-xl shadow-card">
+        <div className="bg-card p-5 rounded-xl shadow-card">
             <div className="flex justify-between items-start">
                 <p className="text-gray-text font-semibold">{title}</p>
                 <Icon className="w-5 h-5 text-gray-text" />
@@ -141,7 +141,7 @@ export default function ClientsPage() {
       </div>
 
       {/* Lista de Clientes */}
-      <div className="bg-light-secondary rounded-xl shadow-card overflow-x-auto">
+      <div className="bg-card rounded-xl shadow-card overflow-x-auto">
         <div className="p-5 border-b border-light-tertiary flex justify-between items-center">
             <h3 className="font-bold text-dark-text">Lista de Clientes</h3>
             <Link href="/dashboard/clients/new">

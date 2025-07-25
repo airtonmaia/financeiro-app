@@ -36,7 +36,7 @@ const formatCurrency = (value: number | null | undefined) => {
 
 function StatCard({ title, value, colorClass }: { title: string; value: string; colorClass?: string; }) {
     return (
-        <div className="bg-light-secondary dark:bg-dark-secondary p-5 rounded-xl shadow-card">
+        <div className="bg-card dark:bg-dark-secondary p-5 rounded-xl shadow-card">
             <p className="text-gray-text text-sm">{title}</p>
             <p className={`text-2xl font-bold mt-1 ${colorClass || 'text-dark-text dark:text-light-text'}`}>{value}</p>
         </div>
@@ -47,7 +47,7 @@ function LoanListItem({ loan, onDelete }: { loan: EmprestimoDetalhado, onDelete:
     const saldoDevedor = loan.valor_original - loan.total_pago;
     
     return (
-        <div className="bg-light-secondary dark:bg-dark-secondary p-6 rounded-xl shadow-card space-y-4">
+        <div className="bg-card dark:bg-dark-secondary p-6 rounded-xl shadow-card space-y-4">
             <div className="flex justify-between items-start">
                 <div>
                     <h3 className="text-xl font-bold">{loan.titulo || loan.tipo_emprestimo}</h3>
@@ -206,7 +206,7 @@ function LoanModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () =
 
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-light-secondary dark:bg-dark-secondary p-8 rounded-xl shadow-lg w-full max-w-lg">
+            <div className="bg-card dark:bg-dark-secondary p-8 rounded-xl shadow-lg w-full max-w-lg">
                 <h2 className="text-xl font-bold mb-1">Cadastrar Novo Empréstimo</h2>
                 <p className="text-sm text-gray-text mb-6">Emprestimos, Cartões de crédito e financimantos</p>
                 <form onSubmit={handleSubmit} className="space-y-4">

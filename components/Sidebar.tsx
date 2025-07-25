@@ -95,7 +95,7 @@ export default function Sidebar() {
     const pathname = usePathname();
 
     return (
-        <aside className="w-20 lg:w-64 bg-light-secondary p-4 flex flex-col justify-between border-r border-light-tertiary dark:bg-dark-secondary dark:border-dark-tertiary">
+        <aside className="w-20 lg:w-64 bg-card p-4 flex flex-col justify-between border-r border-light-tertiary dark:bg-dark-secondary dark:border-dark-tertiary">
             <div>
                 <div className="p-3 mb-10">
                     <Link href="/dashboard" className="flex items-center justify-center lg:justify-start">

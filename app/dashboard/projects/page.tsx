@@ -35,7 +35,7 @@ function BoardCard({ board, onEdit, onDelete }: { board: Quadro; onEdit: (board:
                         className="h-24 bg-cover bg-center" 
                         style={{ backgroundColor: board.cor, backgroundImage: board.imagem_cover_url ? `url(${board.imagem_cover_url})` : 'none' }}
                     />
-                    <div className="bg-light-secondary dark:bg-dark-secondary p-4">
+                    <div className="bg-card dark:bg-dark-secondary p-4">
                         <h3 className="font-bold text-dark-text dark:text-light-text truncate">{board.nome}</h3>
                     </div>
                 </div>
@@ -67,7 +67,7 @@ function BoardModal({ isOpen, onClose, onSave, boardToEdit }: { isOpen: boolean;
 
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-            <div className="bg-light-secondary dark:bg-dark-secondary p-8 rounded-xl shadow-lg w-full max-w-md">
+            <div className="bg-card dark:bg-dark-secondary p-8 rounded-xl shadow-lg w-full max-w-md">
                 <h2 className="text-xl font-bold mb-6">{boardToEdit ? 'Editar Quadro' : 'Criar Novo Quadro'}</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
