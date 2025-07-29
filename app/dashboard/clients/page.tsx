@@ -15,7 +15,7 @@ import { DataTable } from "@/components/ui/data-table";
 
 function ClientStatCard({ title, value, description, icon: Icon }: { title: string; value: string; description: string; icon: React.ElementType; }) {
     return (
-        <div className="bg-brand-50 p-5 rounded-xl shadow-sm border">
+        <div className="bg-card p-5 rounded-xl shadow-sm border">
             <div className="flex justify-between items-start">
                 <p className="text-muted-foreground font-semibold">{title}</p>
                 <Icon className="w-5 h-5 text-muted-foreground" />
@@ -53,6 +53,22 @@ export default function ClientsPage() {
     fetchClients();
   }, [fetchClients]);
   
+  const handleDeleteClient = async (id: string) => {
+    if (window.confirm("Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.")) {
+        const { error } = await supabase
+            .from('clientes')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            alert(`Erro ao excluir cliente: ${error.message}`);
+        } else {
+            // Atualiza a lista de clientes após a exclusão
+            setClients(clients.filter(client => client.id !== id));
+        }
+    }
+  };
+
   if (error) {
     return <div className="p-5 text-center text-destructive bg-destructive/10 rounded-lg">{error}</div>;
   }
@@ -66,22 +82,27 @@ export default function ClientsPage() {
         <ClientStatCard title="Valor Total" value="R$ 27.000" description="Em projetos ativos" icon={DollarSign} />
       </div>
 
-      <div className="shadow-sm ">
+      <div className="bg-card rounded-xl shadow-sm border p-6">
         <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Clientes</h2>
             <Button asChild>
-            <Link href="/dashboard/clients/new">
+              <Link href="/dashboard/clients/new">
                 <Plus className="w-4 h-4 mr-2" /> Novo Cliente
-            </Link>
+              </Link>
             </Button>
         </div>
 
         {/* Lista de Clientes com DataTable */}
         <div>
             {loading ? (
-                <p className="p-5 text-center text-muted-foreground">Carregando clientes...</p>
+                 <p className="p-5 text-center text-muted-foreground">Carregando clientes...</p>
             ) : (
-                <DataTable columns={columns} data={clients} />
+                <DataTable 
+                  columns={columns} 
+                  data={clients} 
+                  // Passamos a função de exclusão para a tabela
+                  deleteClient={handleDeleteClient} 
+                />
             )}
         </div>
       </div>

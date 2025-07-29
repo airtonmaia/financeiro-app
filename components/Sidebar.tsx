@@ -99,8 +99,8 @@ export default function Sidebar() {
             <div>
                 <div className="p-3 mb-10">
                     <Link href="/dashboard" className="flex items-center justify-center lg:justify-start">
-                        <div className="w-10 h-10 bg-dark-text dark:bg-light-primary rounded-full"></div>
-                        <span className="ml-4 text-xl font-bold hidden lg:block text-dark-text dark:text-light-text">Financeiro</span>
+                        {/* <div className="w-10 h-10 bg-brand-50 dark:bg-light-primary rounded-full">Pro</div> */}
+                        <span className="ml-1 text-xl font-bold hidden lg:block text-brand-primary dark:text-light-text">Agência 360</span>
                     </Link>
                 </div>
                 <nav className="flex flex-col space-y-2">
