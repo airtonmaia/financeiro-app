@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
-import { Users, Briefcase, DollarSign, Mail, Phone, Edit, Trash2, Plus, FileText, Building } from 'lucide-react';
+import { Users, Briefcase, DollarSign, Edit, Trash2, Plus } from 'lucide-react';
 
 // --- TIPOS ---
 export type Client = {
@@ -23,7 +23,7 @@ export type Client = {
 
 function ClientStatCard({ title, value, description, icon: Icon }: { title: string; value: string; description: string; icon: React.ElementType; }) {
     return (
-        <div className="bg-card p-5 rounded-xl shadow-card">
+        <div className="bg-brand-50 p-5 rounded-xl shadow-card">
             <div className="flex justify-between items-start">
                 <p className="text-gray-text font-semibold">{title}</p>
                 <Icon className="w-5 h-5 text-gray-text" />
@@ -34,11 +34,10 @@ function ClientStatCard({ title, value, description, icon: Icon }: { title: stri
     );
 }
 
-// Componente de item da lista, agora formatado com colunas separadas
 function ClientListItem({ client, onDelete }: { client: Client, onDelete: (id: string) => void }) {
     return (
         <div className="border-b border-light-tertiary last:border-b-0">
-            {/* Layout para Desktop (visível em telas médias e maiores) */}
+            {/* Layout para Desktop */}
             <div className="hidden md:grid md:grid-cols-12 gap-4 items-center py-4 px-5 hover:bg-gray-50 transition-colors text-sm">
                 <p className="col-span-3 font-bold text-dark-text truncate">{client.nome}</p>
                 <p className="col-span-2 text-gray-text truncate">{client.empresa || 'N/A'}</p>
@@ -46,8 +45,8 @@ function ClientListItem({ client, onDelete }: { client: Client, onDelete: (id: s
                 <p className="col-span-2 text-gray-text truncate">{client.telefone}</p>
                 <p className="col-span-2 text-gray-text truncate">{client.cpf_cnpj || 'Não informado'}</p>
                 <div className="col-span-1 flex items-center justify-end gap-2">
-                    <Link href={`/dashboard/clients/${client.id}/edit`}>
-                        <button className="p-2 text-gray-text hover:text-brand-blue hover:bg-blue-100 rounded-full transition-colors" title="Editar Cliente">
+                    <Link href={`/dashboard/clients/${client.id}/edit`} title="Editar Cliente">
+                        <button className="p-2 text-gray-text hover:text-brand-blue hover:bg-blue-100 rounded-full transition-colors">
                             <Edit className="w-4 h-4" />
                         </button>
                     </Link>
@@ -61,7 +60,7 @@ function ClientListItem({ client, onDelete }: { client: Client, onDelete: (id: s
                 </div>
             </div>
 
-            {/* Layout para Mobile (visível apenas em telas pequenas) */}
+            {/* Layout para Mobile */}
             <div className="md:hidden p-4 space-y-2">
                 <div className="flex justify-between items-start">
                     <div>
@@ -145,13 +144,13 @@ export default function ClientsPage() {
         <div className="p-5 border-b border-light-tertiary flex justify-between items-center">
             <h3 className="font-bold text-dark-text">Lista de Clientes</h3>
             <Link href="/dashboard/clients/new">
-                <button className="bg-brand-green hover:bg-brand-green/90 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 whitespace-nowrap">
+                <button className="bg-brand-primary text-sm hover:bg-opacity-90 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 whitespace-nowrap">
                     <Plus className="w-4 h-4" /> Novo Cliente
                 </button>
             </Link>
         </div>
         
-        {/* Cabeçalho da Tabela (visível em desktop) */}
+        {/* Cabeçalho da Tabela */}
         <div className="hidden md:grid md:grid-cols-12 gap-4 px-5 py-3 border-b border-light-tertiary bg-gray-50 text-xs font-bold text-gray-text uppercase tracking-wider">
             <h4 className="col-span-3">Nome</h4>
             <h4 className="col-span-2">Empresa</h4>

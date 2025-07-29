@@ -144,7 +144,7 @@ export default function ProjectBoardsPage() {
               <h1 className="text-2xl font-bold">Quadros de Projetos</h1>
               <p className="text-sm text-gray-text">Selecione um quadro para ver seus projetos.</p>
           </div>
-          <button onClick={handleOpenNewModal} className="bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2">
+          <button onClick={handleOpenNewModal} className="bg-brand-primary text-sm hover:bg-brand-primary/90 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2">
               <Plus className="w-4 h-4" /> Novo Quadro
           </button>
       </div>

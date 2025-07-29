@@ -14,7 +14,6 @@ export default function Header() {
     const supabase = createSupabaseBrowserClient();
     const router = useRouter();
     
-    // Estados para os menus, dados do usuário e tema
     const [isQuickAccessOpen, setIsQuickAccessOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [user, setUser] = useState<User | null>(null);
@@ -23,7 +22,6 @@ export default function Header() {
     const quickAccessRef = useRef<HTMLDivElement>(null);
     const userMenuRef = useRef<HTMLDivElement>(null);
 
-    // Busca os dados do usuário e o tema salvo
     useEffect(() => {
         const fetchUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
@@ -40,7 +38,6 @@ export default function Header() {
         }
     }, [supabase]);
 
-    // Efeito para fechar os menus se o usuário clicar fora
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (quickAccessRef.current && !quickAccessRef.current.contains(event.target as Node)) {
@@ -54,7 +51,6 @@ export default function Header() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // Função para alternar o dark mode
     const toggleDarkMode = () => {
         if (isDarkMode) {
             document.documentElement.classList.remove('dark');
@@ -66,7 +62,6 @@ export default function Header() {
         setIsDarkMode(!isDarkMode);
     };
     
-    // Função para fazer logout
     const handleSignOut = async () => {
         await supabase.auth.signOut();
         router.push('/auth/login');
@@ -83,7 +78,7 @@ export default function Header() {
             
             <div className="flex-1 md:flex-grow-0 flex justify-end items-center gap-4">
                 <div className="relative" ref={quickAccessRef}>
-                    <button onClick={() => setIsQuickAccessOpen(!isQuickAccessOpen)} className="bg-brand-blue hover:bg-brand-blue/90 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg" title="Acesso Rápido">
+                    <button onClick={() => setIsQuickAccessOpen(!isQuickAccessOpen)} className="bg-brand-primary hover:bg-opacity-90 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg" title="Acesso Rápido">
                       <Plus className="w-5 h-5" />
                     </button>
                     {isQuickAccessOpen && (
