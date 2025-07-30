@@ -1,102 +1,87 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal, ArrowUpDown, Eye, Edit, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import Link from "next/link"
 
-// Este tipo deve corresponder ao que você tem na sua página de clientes
 export type Client = {
   id: string;
   nome: string;
   empresa: string | null;
   email_contato: string;
   telefone: string;
+  origem: string;
+  tipo: string;
+  projetos: number;
+  valor_total: number;
 };
-
-// A função de exclusão será passada para a tabela e, em seguida, para as colunas
-// através da propriedade `meta` da tabela.
-declare module '@tanstack/react-table' {
-  interface TableMeta<TData> {
-    deleteClient: (clientId: string) => void
-  }
-}
 
 export const columns: ColumnDef<Client>[] = [
   {
     accessorKey: "nome",
-    header: ({ column }) => {
+    header: "Nome",
+    cell: ({ row }) => (
+      <div>
+        <div className="font-semibold">{row.original.nome}</div>
+        {row.original.empresa && (
+          <div className="text-xs text-muted-foreground">{row.original.empresa}</div>
+        )}
+      </div>
+    ),
+  },
+  {
+    id: "contato",
+    header: "Contato",
+    cell: ({ row }) => (
+      <div>
+        <div>{row.original.email_contato}</div>
+        <div className="text-xs text-muted-foreground">{row.original.telefone}</div>
+      </div>
+    ),
+  },
+  {
+    accessorKey: "origem",
+    header: "Origem",
+  },
+  {
+    accessorKey: "tipo",
+    header: "Tipo",
+    cell: ({ row }) => (
+      <span className="font-bold">{row.original.tipo}</span>
+    ),
+  },
+  {
+    accessorKey: "projetos",
+    header: "Projetos",
+    cell: ({ row }) => row.original.projetos,
+  },
+  {
+    accessorKey: "valor_total",
+    header: "Valor Total",
+    cell: ({ row }) => {
+      const valor = typeof row.original.valor_total === "number" ? row.original.valor_total : 0;
       return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        <span className={valor >= 10000 ? "font-bold" : ""}>
+          {valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+        </span>
+      );
+    },
+  },
+  {
+    id: "acoes",
+    header: "Ações",
+    cell: ({ row }) => (
+      <div className="flex gap-2 text-sm">
+        <Link href={`/dashboard/clients/${row.original.id}/edit`} className="hover:underline">ver</Link>
+        <span>|</span>
+        <Link href={`/dashboard/clients/${row.original.id}/edit`} className="hover:underline">editar</Link>
+        <span>|</span>
+        <button
+          className="text-destructive hover:underline"
+          onClick={() => row.table.options.meta?.deleteClient(row.original.id)}
         >
-          Nome
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
+          excluir
+        </button>
+      </div>
+    ),
   },
-  {
-    accessorKey: "empresa",
-    header: "Empresa",
-  },
-  {
-    accessorKey: "email_contato",
-    header: "Email",
-  },
-  {
-    accessorKey: "telefone",
-    header: "Telefone",
-  },
-  {
-    id: "actions",
-    cell: ({ row, table }) => {
-      const client = row.original
- 
-      return (
-        <div className="text-right">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Abrir menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Ações</DropdownMenuLabel>
-              <DropdownMenuItem asChild>
-                <Link href={`/dashboard/clients/${client.id}/edit`} className="flex items-center">
-                  <Eye className="mr-2 h-4 w-4" />
-                  Ver perfil
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={`/dashboard/clients/${client.id}/edit`} className="flex items-center">
-                  <Edit className="mr-2 h-4 w-4" />
-                  Editar
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive flex items-center"
-                onClick={() => table.options.meta?.deleteClient(client.id)}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Excluir
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      )
-    },
-  },
-]
+];
