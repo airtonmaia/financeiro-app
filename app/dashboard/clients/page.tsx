@@ -13,14 +13,14 @@ import { DataTable } from "@/components/ui/data-table";
 
 // --- COMPONENTES ---
 
-function ClientStatCard({ title, value, description, icon: Icon }: { title: string; value: string; description: string; icon: React.ElementType; }) {
+function ClientStatCard({ title, value, description, icon: Icon, valueColor }: { title: string; value: string; description: string; icon: React.ElementType; valueColor?: string; }) {
     return (
         <div className="bg-card p-5 rounded-xl shadow-sm border">
             <div className="flex justify-between items-start">
                 <p className="text-muted-foreground font-semibold">{title}</p>
                 <Icon className="w-5 h-5 text-muted-foreground" />
             </div>
-            <p className="text-3xl font-bold text-foreground mt-2">{value}</p>
+            <p className={`text-3xl font-bold mt-2 ${valueColor ?? 'text-foreground'}`}>{value}</p>
             <p className="text-xs text-muted-foreground mt-1">{description}</p>
         </div>
     );
@@ -77,9 +77,9 @@ export default function ClientsPage() {
     <div className="space-y-6">
       {/* Cards de Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <ClientStatCard title="Total de Clientes" value={String(clients.length)} description="+2 novos este mês" icon={Users} />
-        <ClientStatCard title="Projetos Ativos" value="6" description="Distribuídos entre 3 clientes" icon={Briefcase} />
-        <ClientStatCard title="Valor Total" value="R$ 27.000" description="Em projetos ativos" icon={DollarSign} />
+        <ClientStatCard title="Total de Clientes" value={String(clients.length)} description="+2 novos este mês" icon={Users} valueColor="text-green-600" />
+        <ClientStatCard title="Projetos Ativos" value="6" description="Distribuídos entre 3 clientes" icon={Briefcase} valueColor="text-brand-primary" />
+        <ClientStatCard title="Valor Total" value="R$ 27.000" description="Em projetos ativos" icon={DollarSign} valueColor="text-green-600" />
       </div>
 
       <div className="bg-card rounded-xl shadow-sm border p-6">
