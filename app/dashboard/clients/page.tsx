@@ -86,8 +86,8 @@ export default function ClientsPage() {
         <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Clientes</h2>
             <Button asChild>
-              <Link href="/dashboard/clients/new">
-                <Plus className="w-4 h-4 mr-2" /> Novo Cliente
+              <Link href="/dashboard/clients/new" className="bg-brand-primary text-white">
+                <Plus className="w-4 h-4 mr-2 " /> Novo Cliente
               </Link>
             </Button>
         </div>

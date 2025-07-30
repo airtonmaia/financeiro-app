@@ -103,7 +103,7 @@ export default function Sidebar() {
                         <span className="ml-1 text-xl font-bold hidden lg:block text-brand-primary dark:text-light-text">Agência 360</span>
                     </Link>
                 </div>
-                <nav className="flex flex-col space-y-2">
+                <nav className="flex flex-col space-y-2 text-gray-700 hover:text-gray-900">
                     {navItems.map((item) => (
                         item.subItems ? (
                             <NavGroup 
