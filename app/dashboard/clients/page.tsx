@@ -82,7 +82,7 @@ export default function ClientsPage() {
         <ClientStatCard title="Valor Total" value="R$ 27.000" description="Em projetos ativos" icon={DollarSign} valueColor="text-green-600" />
       </div>
 
-      <div className="bg-card rounded-xl shadow-sm border p-6">
+      <div className="rounded-xl ">
         <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Clientes</h2>
             <Button asChild>

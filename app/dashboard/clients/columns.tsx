@@ -23,7 +23,7 @@ export const columns: ColumnDef<Client>[] = [
       <div>
         <div className="font-semibold">{row.original.nome}</div>
         {row.original.empresa && (
-          <div className="text-xs text-muted-foreground">{row.original.empresa}</div>
+          <div className="text-xs text-muted-foreground text-gray-500">{row.original.empresa}</div>
         )}
       </div>
     ),
@@ -60,7 +60,7 @@ export const columns: ColumnDef<Client>[] = [
     cell: ({ row }) => {
       const valor = typeof row.original.valor_total === "number" ? row.original.valor_total : 0;
       return (
-        <span className={valor >= 10000 ? "font-bold" : ""}>
+        <span className={valor >= 10000 ? "font-bold" : "font-bold text-brand-primary"}>
           {valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
         </span>
       );
