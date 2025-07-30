@@ -77,9 +77,9 @@ export default function ClientsPage() {
     <div className="space-y-6">
       {/* Cards de Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <ClientStatCard title="Total de Clientes" value={String(clients.length)} description="+2 novos este mês" icon={Users} valueColor="text-green-600" />
-        <ClientStatCard title="Projetos Ativos" value="6" description="Distribuídos entre 3 clientes" icon={Briefcase} valueColor="text-brand-primary" />
-        <ClientStatCard title="Valor Total" value="R$ 27.000" description="Em projetos ativos" icon={DollarSign} valueColor="text-green-600" />
+        <ClientStatCard title="Total de Clientes" value={String(clients.length)} description={<span className="text-gray-500">+2 novos este mês</span>} icon={Users} valueColor="text-green-600" />
+        <ClientStatCard title="Projetos Ativos" value="6" description={<span className="text-gray-500">Distribuídos entre 3 clientes</span>} icon={Briefcase} valueColor="text-brand-primary" />
+        <ClientStatCard title="Valor Total" value="R$ 27.000"  description={<span className="text-gray-500">Em projetos ativos</span>} icon={DollarSign} valueColor="text-green-600" />
       </div>
 
       <div className="rounded-xl ">
