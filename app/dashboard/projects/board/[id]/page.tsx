@@ -39,7 +39,7 @@ function ProjectCard({ project, statusColor, onOpen, onEdit, onMove, onDelete }:
     };
 
     return (
-        <div className="bg-card dark:bg-dark-secondary rounded-xl shadow-card p-4 space-y-3 cursor-pointer" onClick={onOpen}>
+        <div className="bg-white dark:bg-dark-secondary rounded-xl shadow-card p-4 space-y-3 cursor-pointer" onClick={onOpen}>
             <div className="flex justify-between items-center">
                 <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ backgroundColor: `${statusColor}20`, color: statusColor }}>
                     {project.tipo_projeto}

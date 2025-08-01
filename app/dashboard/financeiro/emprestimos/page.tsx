@@ -47,7 +47,7 @@ function LoanListItem({ loan, onDelete }: { loan: EmprestimoDetalhado, onDelete:
     const saldoDevedor = loan.valor_original - loan.total_pago;
     
     return (
-        <div className="bg-card dark:bg-dark-secondary p-6 rounded-xl shadow-card space-y-4">
+        <div className="bg-white dark:bg-dark-secondary p-6 rounded-xl shadow-card space-y-4">
             <div className="flex justify-between items-start">
                 <div>
                     <h3 className="text-xl font-bold">{loan.titulo || loan.tipo_emprestimo}</h3>

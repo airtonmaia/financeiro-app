@@ -13,7 +13,7 @@ import { AlertTriangle, Calendar, TrendingUp, TrendingDown } from 'lucide-react'
 
 function ReportCard({ title, children }: { title: string; children: React.ReactNode }) {
     return (
-        <div className="bg-card dark:bg-dark-secondary p-6 rounded-xl shadow-card">
+        <div className="bg-white dark:bg-dark-secondary p-6 rounded-xl shadow-card">
             <h3 className="font-bold text-dark-text dark:text-light-text mb-4">{title}</h3>
             {children}
         </div>

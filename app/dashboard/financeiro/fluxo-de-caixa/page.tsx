@@ -16,7 +16,7 @@ type Categoria = { id: string; nome: string; tipo: string; };
 function StatCard({ title, value, isPositive }: { title: string; value: string; isPositive?: boolean; }) {
     const colorClass = isPositive === true ? 'text-success-text' : isPositive === false ? 'text-danger-text' : 'text-dark-text dark:text-light-text';
     return (
-        <div className="bg-card dark:bg-dark-secondary p-5 rounded-xl shadow-sm bg-white">
+        <div className="bg-white dark:bg-dark-secondary p-5 rounded-xl shadow-sm bg-white">
             <p className="text-gray-text text-sm">{title}</p>
             <p className={`text-2xl font-bold mt-1 ${colorClass}`}>{value}</p>
         </div>
@@ -115,7 +115,7 @@ function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClos
 
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-            <div className="bg-card dark:bg-dark-secondary p-8 rounded-xl shadow-lg w-full max-w-lg">
+            <div className="bg-white dark:bg-dark-secondary p-8 rounded-xl shadow-lg w-full max-w-lg">
                 <h2 className="text-xl font-bold mb-1">Adicionar Transação</h2>
                 <p className="text-sm text-gray-text mb-6">Registe uma nova receita ou despesa.</p>
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -249,7 +249,7 @@ export default function CashFlowPage() {
                 <StatCard title="A Pagar" value={`R$ ${aPagar.toFixed(2)}`} />
             </div>
 
-            <div className="bg-card dark:bg-dark-secondary rounded-xl shadow-card">
+            <div className="bg-white dark:bg-dark-secondary rounded-xl shadow-card">
                  <div className="p-5 flex flex-wrap gap-4 justify-between items-center border-b border-light-tertiary dark:border-dark-tertiary">
                     <div className="bg-gray-100 dark:bg-dark-tertiary p-1 rounded-lg flex items-center">
                         <button onClick={() => setActiveTab('Todas')} className={`px-4 py-1.5 text-sm font-semibold rounded-md ${activeTab === 'Todas' ? 'bg-white dark:bg-dark-secondary shadow' : 'text-gray-text'}`}>Todas</button>

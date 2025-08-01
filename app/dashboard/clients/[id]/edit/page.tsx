@@ -26,7 +26,7 @@ type Client = {
 function ClientInfoCard({ client }: { client: Client | null }) {
     if (!client) return null;
     return (
-        <div className="bg-card p-6 rounded-xl shadow-card">
+        <div className="bg-white p-6 rounded-xl shadow-card">
             <div className="flex justify-between items-start">
                 <div>
                     <h2 className="text-2xl font-bold text-dark-text">{client.nome}</h2>
@@ -59,7 +59,7 @@ function ClientInfoCard({ client }: { client: Client | null }) {
 // Card de Estatísticas do Cliente
 function ClientStatCard({ title, value, icon: Icon }: { title: string; value: string | number; icon: React.ElementType }) {
     return (
-        <div className="bg-card p-5 rounded-xl shadow-card">
+        <div className="bg-white p-5 rounded-xl shadow-card">
             <div className="flex items-center gap-4">
                 <div className="p-3 bg-gray-100 rounded-lg">
                     <Icon className="w-6 h-6 text-gray-text" />
@@ -141,7 +141,7 @@ export default function ClientDetailPage() {
             </div>
 
             {/* Conteúdo das Abas */}
-            <div className="bg-card p-6 rounded-xl shadow-card min-h-[200px]">
+            <div className="bg-white p-6 rounded-xl shadow-card min-h-[200px]">
                 {activeTab === 'overview' && <div>Conteúdo da Visão Geral aqui...</div>}
                 {activeTab === 'projects' && <div>Lista de Projetos aqui...</div>}
                 {activeTab === 'transactions' && <div>Lista de Transações aqui...</div>}

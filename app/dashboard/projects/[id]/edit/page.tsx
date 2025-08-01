@@ -136,7 +136,7 @@ export default function EditProjectPage() {
 
     return (
         <div className="max-w-4xl mx-auto">
-            <div className="bg-card p-8 rounded-xl shadow-card">
+            <div className="bg-white p-8 rounded-xl shadow-card">
                 <h1 className="text-2xl font-bold text-dark-text mb-8">Editar Projeto</h1>
                 <form onSubmit={handleSubmit} className="space-y-8">
                     {/* O formulário aqui é idêntico ao de criação, mas já vem preenchido */}
@@ -184,7 +184,7 @@ export default function EditProjectPage() {
                     {error && <p className="text-sm text-danger-text mt-4">{error}</p>}
 
                     <div className="flex justify-end gap-4 pt-4">
-                         <button type="button" onClick={() => router.back()} className="bg-card hover:bg-light-tertiary text-dark-text font-semibold py-2 px-6 rounded-lg border border-light-tertiary">
+                         <button type="button" onClick={() => router.back()} className="bg-white hover:bg-light-tertiary text-dark-text font-semibold py-2 px-6 rounded-lg border border-light-tertiary">
                             Cancelar
                          </button>
                          <button type="submit" disabled={loading} className="bg-violet-600 hover:bg-violet-600/90 text-white font-semibold py-2 px-6 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed">

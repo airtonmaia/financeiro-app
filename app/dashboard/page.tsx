@@ -78,19 +78,19 @@ export default function DashboardPage() {
               + Depositar
             </button>
         </div>
-        <div className="bg-card p-5 rounded-lg shadow-card bg-white">
+        <div className="bg-white p-5 rounded-lg shadow-card bg-white">
             <p className="text-gray-text">Receitas</p>
             <p className="text-2xl font-bold text-dark-text mt-1">R$ 12.540</p>
             <ProgressBar value={75} className="bg-success-text bg-green-500" />
             <p className="text-xs text-gray-text mt-2">75% da meta mensal</p>
         </div>
-        <div className="bg-card p-5 rounded-lg shadow-card bg-white">
+        <div className="bg-white p-5 rounded-lg shadow-card bg-white">
             <p className="text-gray-text">Despesas</p>
             <p className="text-2xl font-bold text-dark-text mt-1">R$ 4.230</p>
             <ProgressBar value={50} className="bg-danger-text" />
             <p className="text-xs text-gray-text mt-2">50% do orçamento</p>
         </div>
-        <div className="bg-card p-5 rounded-lg shadow-card bg-white">
+        <div className="bg-white p-5 rounded-lg shadow-card bg-white">
             <p className="text-gray-text">Projetos Ativos</p>
             <p className="text-4xl font-bold text-dark-text mt-2">8</p>
             <p className="text-xs text-gray-text mt-2">3 entregues esta semana</p>
@@ -99,7 +99,7 @@ export default function DashboardPage() {
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-card p-5 rounded-lg shadow-card bg-white">
+        <div className="lg:col-span-2 bg-white p-5 rounded-lg shadow-card bg-white">
             <h3 className="font-bold text-dark-text mb-4">Receitas Mensais</h3>
             <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -113,7 +113,7 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
             </div>
         </div>
-        <div className="bg-card p-5 rounded-lg shadow-card bg-white">
+        <div className="bg-white p-5 rounded-lg shadow-card bg-white">
             <h3 className="font-bold text-dark-text mb-4">Distribuição de Gastos</h3>
             <div className="h-72 flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
@@ -130,7 +130,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Transações Recentes */}
-      <div className="bg-card p-5 rounded-lg shadow-card bg-white">
+      <div className="bg-white p-5 rounded-lg shadow-card bg-white">
         <h3 className="font-bold text-dark-text mb-2">Transações Recentes</h3>
         <div>
             {recentTransactions.map((transaction, index) => (

@@ -54,7 +54,7 @@ function CategoryManager({ title, icon: Icon, categoryType, initialCategories }:
     };
 
     return (
-        <div className="bg-card dark:bg-dark-secondary p-6 rounded-xl shadow-card">
+        <div className="bg-white dark:bg-dark-secondary p-6 rounded-xl shadow-card">
             <h3 className="font-bold text-dark-text dark:text-light-text mb-4 flex items-center gap-2"><Icon className="w-5 h-5" /> {title}</h3>
             <div className="space-y-2 mb-4">
                 {categories.map(cat => (
@@ -115,7 +115,7 @@ function StatusManager({ initialStatuses }: { initialStatuses: ProjectStatus[] }
     };
 
     return (
-        <div className="bg-card dark:bg-dark-secondary p-6 rounded-xl shadow-card">
+        <div className="bg-white dark:bg-dark-secondary p-6 rounded-xl shadow-card">
             <h3 className="font-bold text-dark-text dark:text-light-text mb-4 flex items-center gap-2"><Palette className="w-5 h-5" /> Status de Projetos</h3>
             <div className="space-y-2 mb-4">
                 {statuses.map(status => (

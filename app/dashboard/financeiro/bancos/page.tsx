@@ -44,7 +44,7 @@ function BankModal({ isOpen, onClose, onSave, bankToEdit }: { isOpen: boolean; o
 
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-            <div className="bg-card dark:bg-dark-secondary p-8 rounded-xl shadow-lg w-full max-w-md">
+            <div className="bg-white dark:bg-dark-secondary p-8 rounded-xl shadow-lg w-full max-w-md">
                 <h2 className="text-xl font-bold mb-6">{bankToEdit ? 'Editar Conta' : 'Adicionar Nova Conta'}</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
@@ -123,7 +123,7 @@ export default function BanksPage() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {banks.map(bank => (
-                        <div key={bank.id} className="bg-card dark:bg-dark-secondary p-5 rounded-xl shadow-card space-y-3">
+                        <div key={bank.id} className="bg-white dark:bg-dark-secondary p-5 rounded-xl shadow-card space-y-3">
                             <div className="flex items-center gap-4">
                                 <div className="p-3 bg-gray-100 dark:bg-dark-tertiary rounded-lg">
                                     <Landmark className="w-6 h-6 text-gray-text" />
