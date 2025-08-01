@@ -74,9 +74,9 @@ export default function DashboardPage() {
             <p className="font-medium">Saldo Total</p>
             <p className="text-3xl font-bold mt-2">R$ 20.670</p>
             <p className="text-xs mt-3 opacity-80">+2.4% desde o mês passado</p>
-            <button className="bg-white/30 hover:bg-white/40 text-white font-semibold py-2 px-4 rounded-lg mt-4 w-full">
+            {/* <button className="bg-white/30 hover:bg-white/40 text-white font-semibold py-2 px-4 rounded-lg mt-4 w-full">
               + Depositar
-            </button>
+            </button> */}
         </div>
         <div className="bg-white p-5 rounded-lg shadow-card ">
             <p className="text-gray-text">Receitas</p>
