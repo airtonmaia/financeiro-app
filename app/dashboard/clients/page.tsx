@@ -15,7 +15,7 @@ import { DataTable } from "@/components/ui/data-table";
 
 function ClientStatCard({ title, value, description, icon: Icon, valueColor }: { title: string; value: string; description: string; icon: React.ElementType; valueColor?: string; }) {
     return (
-        <div className="bg-white shadow-sm  p-5 rounded-xl">
+        <div className="bg-white border p-5 rounded-xl">
             <div className="flex justify-between items-start">
                 <p className="text-muted-foreground font-semibold">{title}</p>
                 <Icon className="w-5 h-5 text-muted-foreground" />
