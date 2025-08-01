@@ -68,7 +68,7 @@ function CategoryManager({ title, icon: Icon, categoryType, initialCategories }:
             </div>
             <form onSubmit={handleAddCategory} className="flex gap-2">
                 <input type="text" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} placeholder="Nova categoria..." className="flex-1 p-2 bg-gray-50 dark:bg-dark-tertiary border border-light-tertiary dark:border-dark-tertiary rounded-lg" />
-                <button type="submit" className="bg-brand-green text-white font-semibold p-2 rounded-lg"><Plus className="w-5 h-5" /></button>
+                <button type="submit" className="bg-violet-600 text-white font-semibold p-2 rounded-lg"><Plus className="w-5 h-5" /></button>
             </form>
         </div>
     );
@@ -133,7 +133,7 @@ function StatusManager({ initialStatuses }: { initialStatuses: ProjectStatus[] }
             <form onSubmit={handleAddStatus} className="flex gap-2">
                 <input type="color" value={newStatusColor} onChange={(e) => setNewStatusColor(e.target.value)} className="w-10 h-10 p-0 border-none rounded-lg cursor-pointer bg-transparent" />
                 <input type="text" value={newStatusName} onChange={(e) => setNewStatusName(e.target.value)} placeholder="Novo status..." className="flex-1 p-2 bg-gray-50 dark:bg-dark-tertiary border border-light-tertiary dark:border-dark-tertiary rounded-lg" />
-                <button type="submit" className="bg-brand-green text-white font-semibold p-2 rounded-lg"><Plus className="w-5 h-5" /></button>
+                <button type="submit" className="bg-violet-600 text-white font-semibold p-2 rounded-lg"><Plus className="w-5 h-5" /></button>
             </form>
         </div>
     );

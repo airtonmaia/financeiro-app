@@ -66,7 +66,7 @@ function BankModal({ isOpen, onClose, onSave, bankToEdit }: { isOpen: boolean; o
                     </div>
                     <div className="flex justify-end gap-4 pt-4">
                         <button type="button" onClick={onClose} className="bg-gray-200 dark:bg-dark-tertiary font-semibold py-2 px-6 rounded-lg">Cancelar</button>
-                        <button type="submit" className="bg-brand-green text-white font-semibold py-2 px-6 rounded-lg">Salvar</button>
+                        <button type="submit" className="bg-violet-600 text-white font-semibold py-2 px-6 rounded-lg">Salvar</button>
                     </div>
                 </form>
             </div>
@@ -113,7 +113,7 @@ export default function BanksPage() {
                     <h1 className="text-2xl font-bold">Contas Bancárias</h1>
                     <p className="text-sm text-gray-text">Gerencie suas contas e saldos iniciais.</p>
                 </div>
-                <button onClick={() => setIsModalOpen(true)} className="bg-brand-green hover:bg-brand-green/90 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2">
+                <button onClick={() => setIsModalOpen(true)} className="bg-violet-600 hover:bg-violet-600/90 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2">
                     <Plus className="w-4 h-4" /> Adicionar Conta
                 </button>
             </div>

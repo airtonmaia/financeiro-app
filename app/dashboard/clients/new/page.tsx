@@ -106,7 +106,7 @@ export default function NewClientPage() {
                          <button type="button" onClick={() => router.back()} className="bg-card hover:bg-light-tertiary text-dark-text font-semibold py-2 px-6 rounded-lg border border-light-tertiary">
                             Cancelar
                          </button>
-                         <button type="submit" disabled={loading} className="bg-brand-green hover:bg-brand-green/90 text-white font-semibold py-2 px-6 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed">
+                         <button type="submit" disabled={loading} className="bg-violet-600 hover:bg-violet-600/90 text-white font-semibold py-2 px-6 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed">
                             {loading ? 'Salvando...' : 'Salvar Cliente'}
                          </button>
                     </div>

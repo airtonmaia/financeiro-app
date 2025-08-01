@@ -42,9 +42,9 @@ function TransactionItem({ type, description, date, amount, status }: RecentTran
         'Pendente': 'bg-yellow-100 text-yellow-600',
     };
     return (
-        <div className="flex items-center justify-between py-4 border-b border-light-tertiary last:border-b-0">
-            <div className="flex items-center gap-4">
-                <div className={`p-2 rounded-full ${isIncome ? 'bg-green-100' : 'bg-red-100'}`}>
+        <div className="flex items-center justify-between bg-gray-200py-4 border-b border-light-tertiary last:border-b-0">
+            <div className="flex items-center gap-4 py-4">
+                <div className={`p-2 rounded-full ${isIncome ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
                     {isIncome ? <ArrowUp className="w-5 h-5 text-success-text" /> : <ArrowDown className="w-5 h-5 text-danger-text" />}
                 </div>
                 <div>
@@ -67,10 +67,10 @@ function TransactionItem({ type, description, date, amount, status }: RecentTran
 // --- PÁGINA PRINCIPAL ---
 export default function DashboardPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 ">
       {/* Cards de Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-brand-primary text-white p-5 rounded-lg shadow-card">
+        <div className="bg-violet-600 text-white p-5 rounded-lg shadow-card">
             <p className="font-medium">Saldo Total</p>
             <p className="text-3xl font-bold mt-2">R$ 20.670</p>
             <p className="text-xs mt-3 opacity-80">+2.4% desde o mês passado</p>
@@ -78,19 +78,19 @@ export default function DashboardPage() {
               + Depositar
             </button>
         </div>
-        <div className="bg-card p-5 rounded-lg shadow-card border">
+        <div className="bg-card p-5 rounded-lg shadow-card bg-white">
             <p className="text-gray-text">Receitas</p>
             <p className="text-2xl font-bold text-dark-text mt-1">R$ 12.540</p>
-            <ProgressBar value={75} className="bg-success-text" />
+            <ProgressBar value={75} className="bg-success-text bg-green-500" />
             <p className="text-xs text-gray-text mt-2">75% da meta mensal</p>
         </div>
-        <div className="bg-card p-5 rounded-lg shadow-card border">
+        <div className="bg-card p-5 rounded-lg shadow-card bg-white">
             <p className="text-gray-text">Despesas</p>
             <p className="text-2xl font-bold text-dark-text mt-1">R$ 4.230</p>
             <ProgressBar value={50} className="bg-danger-text" />
             <p className="text-xs text-gray-text mt-2">50% do orçamento</p>
         </div>
-        <div className="bg-card p-5 rounded-lg shadow-card border">
+        <div className="bg-card p-5 rounded-lg shadow-card bg-white">
             <p className="text-gray-text">Projetos Ativos</p>
             <p className="text-4xl font-bold text-dark-text mt-2">8</p>
             <p className="text-xs text-gray-text mt-2">3 entregues esta semana</p>
@@ -99,7 +99,7 @@ export default function DashboardPage() {
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-card p-5 rounded-lg shadow-card border">
+        <div className="lg:col-span-2 bg-card p-5 rounded-lg shadow-card bg-white">
             <h3 className="font-bold text-dark-text mb-4">Receitas Mensais</h3>
             <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -113,12 +113,12 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
             </div>
         </div>
-        <div className="bg-card p-5 rounded-lg shadow-card border">
+        <div className="bg-card p-5 rounded-lg shadow-card bg-white">
             <h3 className="font-bold text-dark-text mb-4">Distribuição de Gastos</h3>
             <div className="h-72 flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                        <Pie data={spendingData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} fill="#8884d8" paddingAngle={5} dataKey="value">
+                        <Pie data={spendingData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} fill="#4f46e5" paddingAngle={5} dataKey="value">
                             {spendingData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} /> )}
                         </Pie>
                         <Tooltip />
@@ -130,7 +130,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Transações Recentes */}
-      <div className="bg-card p-5 rounded-lg shadow-card border">
+      <div className="bg-card p-5 rounded-lg shadow-card bg-white">
         <h3 className="font-bold text-dark-text mb-2">Transações Recentes</h3>
         <div>
             {recentTransactions.map((transaction, index) => (

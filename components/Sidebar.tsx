@@ -20,7 +20,7 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-    { href: '/dashboard', icon: LayoutDashboard, text: 'Dashboard' },
+    { href: '/dashboard', icon: LayoutDashboard, text: 'Painel' },
     { href: '/dashboard/clients', icon: Users, text: 'Clientes' },
     { href: '/dashboard/projects', icon: Wallet, text: 'Projetos' },
     { 
@@ -45,9 +45,9 @@ function NavLink({ href, icon: Icon, text, active }: { href: string; icon: React
   return (
     <Link
       href={href}
-      className={`flex items-center p-3 rounded-lg transition-colors duration-200 ${
+      className={`flex items-center gap-0 m-0 text-sm text-gray-800 p-3 rounded-lg transition-colors hover:bg-violet-600 hover:text-white duration-200 ${
         active
-          ? 'bg-brand-green/10 text-brand-green font-semibold'
+          ? 'bg-violet-600/10 text-brand-green font-semibold'
           : 'text-gray-text hover:bg-gray-100 hover:text-dark-text dark:hover:bg-dark-tertiary dark:hover:text-white'
       }`}
     >
@@ -61,7 +61,7 @@ function NavGroup({ icon: Icon, text, subItems, activeSubItem }: { icon: React.E
     const [isOpen, setIsOpen] = useState(activeSubItem);
 
     return (
-        <div>
+        <div className="">
             <button 
                 onClick={() => setIsOpen(!isOpen)}
                 className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors duration-200 ${
@@ -75,7 +75,7 @@ function NavGroup({ icon: Icon, text, subItems, activeSubItem }: { icon: React.E
                 <ChevronDown className={`w-4 h-4 transition-transform hidden lg:block ${isOpen ? 'rotate-180' : ''}`} />
             </button>
             {isOpen && (
-                <div className="mt-2 pl-6 lg:pl-8 space-y-1">
+                <div className="mt-2 pl-6 lg:pl-8 space-y-1 ">
                     {subItems.map(item => (
                         <NavLink 
                             key={item.text}

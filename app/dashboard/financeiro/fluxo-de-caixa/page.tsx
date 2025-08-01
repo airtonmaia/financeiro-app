@@ -16,7 +16,7 @@ type Categoria = { id: string; nome: string; tipo: string; };
 function StatCard({ title, value, isPositive }: { title: string; value: string; isPositive?: boolean; }) {
     const colorClass = isPositive === true ? 'text-success-text' : isPositive === false ? 'text-danger-text' : 'text-dark-text dark:text-light-text';
     return (
-        <div className="bg-card dark:bg-dark-secondary p-5 rounded-xl shadow-card">
+        <div className="bg-card dark:bg-dark-secondary p-5 rounded-xl shadow-sm bg-white">
             <p className="text-gray-text text-sm">{title}</p>
             <p className={`text-2xl font-bold mt-1 ${colorClass}`}>{value}</p>
         </div>
@@ -28,7 +28,7 @@ function TransactionListItem({ t, onStatusChange }: { t: Transacao; onStatusChan
     const isPaid = t.status === 'Pago';
 
     return (
-        <div className="border-b border-light-tertiary dark:border-dark-tertiary last:border-b-0">
+        <div className="border-b border-light-tertiaryz dark:border-dark-tertiary last:border-b-0">
             {/* Layout para Desktop */}
             <div className="hidden md:grid md:grid-cols-12 gap-4 items-center py-4 px-5 hover:bg-gray-50 dark:hover:bg-dark-tertiary/50 transition-colors text-sm">
                 <div className="col-span-4 flex items-center gap-3">
@@ -47,7 +47,7 @@ function TransactionListItem({ t, onStatusChange }: { t: Transacao; onStatusChan
                 <div className="col-span-2">
                     <button
                       onClick={() => onStatusChange(t.id, isPaid ? 'Pendente' : 'Pago')}
-                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ease-in-out ${isPaid ? 'bg-brand-green' : 'bg-gray-300 dark:bg-dark-tertiary'}`}
+                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ease-in-out ${isPaid ? 'bg-violet-600' : 'bg-gray-300 dark:bg-dark-tertiary'}`}
                       title={`Marcar como ${isPaid ? 'Pendente' : 'Pago'}`}
                     >
                       <span className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${isPaid ? 'translate-x-6' : ''}`}>
@@ -144,7 +144,7 @@ function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClos
                                     <button
                                       type="button"
                                       onClick={() => setRecorrente(!recorrente)}
-                                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ease-in-out ${recorrente ? 'bg-brand-green' : 'bg-gray-300 dark:bg-dark-tertiary'}`}
+                                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ease-in-out ${recorrente ? 'bg-violet-600' : 'bg-gray-300 dark:bg-dark-tertiary'}`}
                                     >
                                       <span className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${recorrente ? 'translate-x-6' : ''}`}>
                                         {recorrente && <Check className="w-3 h-3 text-brand-green translate-x-0.5 translate-y-0.5" />}
@@ -238,7 +238,7 @@ export default function CashFlowPage() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div><h1 className="text-2xl font-bold">Fluxo de Caixa</h1><p className="text-sm text-gray-text">Controle suas receitas, despesas e fluxo de caixa.</p></div>
-                <button onClick={() => setIsModalOpen(true)} className="bg-brand-blue hover:bg-brand-blue/90 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2"><Plus className="w-4 h-4" /> Nova Transação</button>
+                <button onClick={() => setIsModalOpen(true)} className="bg-violet-700 hover:bg-brand-blue/90 text-white font-semibold py-2 px-4 rounded-md flex items-center gap-2"><Plus className="w-4 h-4" /> Nova Transação</button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">

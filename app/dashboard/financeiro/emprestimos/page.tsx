@@ -36,7 +36,7 @@ const formatCurrency = (value: number | null | undefined) => {
 
 function StatCard({ title, value, colorClass }: { title: string; value: string; colorClass?: string; }) {
     return (
-        <div className="bg-card dark:bg-dark-secondary p-5 rounded-xl shadow-card">
+        <div className="bg-white dark:bg-dark-secondary p-5 rounded-xl shadow-card">
             <p className="text-gray-text text-sm">{title}</p>
             <p className={`text-2xl font-bold mt-1 ${colorClass || 'text-dark-text dark:text-light-text'}`}>{value}</p>
         </div>
@@ -68,7 +68,7 @@ function LoanListItem({ loan, onDelete }: { loan: EmprestimoDetalhado, onDelete:
                     <span>{loan.parcelas_pagas}/{loan.numero_parcelas} parcelas</span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-dark-tertiary rounded-full h-2">
-                    <div className="bg-brand-green h-2 rounded-full" style={{ width: `${(loan.total_pago / loan.valor_original) * 100}%` }}></div>
+                    <div className="bg-violet-600 h-2 rounded-full" style={{ width: `${(loan.total_pago / loan.valor_original) * 100}%` }}></div>
                 </div>
             </div>
 
@@ -91,7 +91,7 @@ function LoanListItem({ loan, onDelete }: { loan: EmprestimoDetalhado, onDelete:
             </div>
             <div className="flex justify-end gap-2">
                 <button className="text-sm bg-gray-100 dark:bg-dark-tertiary hover:bg-gray-200 font-semibold py-2 px-4 rounded-lg">Ver Detalhes</button>
-                <button className="text-sm bg-brand-green text-white font-semibold py-2 px-4 rounded-lg">Pagar Parcela</button>
+                <button className="text-sm bg-violet-600 text-white font-semibold py-2 px-4 rounded-lg">Pagar Parcela</button>
                 <button onClick={() => onDelete(loan.id)} className="text-sm bg-red-100 text-danger-text hover:bg-red-200 font-semibold p-2 rounded-lg">
                     <Trash2 className="w-4 h-4" />
                 </button>
@@ -206,7 +206,7 @@ function LoanModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () =
 
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-card dark:bg-dark-secondary p-8 rounded-xl shadow-lg w-full max-w-lg">
+            <div className="bg-white dark:bg-dark-secondary p-8 rounded-xl shadow-lg w-full max-w-lg">
                 <h2 className="text-xl font-bold mb-1">Cadastrar Novo Empréstimo</h2>
                 <p className="text-sm text-gray-text mb-6">Emprestimos, Cartões de crédito e financimantos</p>
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -256,7 +256,7 @@ function LoanModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () =
                     </div>
                     <div className="flex justify-end gap-4 pt-4">
                         <button type="button" onClick={onClose} className="bg-gray-200 dark:bg-dark-tertiary font-semibold py-2 px-6 rounded-lg">Cancelar</button>
-                        <button type="submit" disabled={loading} className="bg-brand-green text-white font-semibold py-2 px-6 rounded-lg">{loading ? 'A guardar...' : 'Cadastrar Empréstimo'}</button>
+                        <button type="submit" disabled={loading} className="bg-violet-600 text-white font-semibold py-2 px-6 rounded-lg">{loading ? 'A guardar...' : 'Cadastrar Empréstimo'}</button>
                     </div>
                 </form>
             </div>
@@ -321,12 +321,12 @@ export default function LoansPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center ">
                 <div>
                     <h1 className="text-2xl font-bold">Empréstimos & Financiamentos</h1>
                     <p className="text-sm text-gray-text">Controle completo dos seus empréstimos e financiamentos ativos.</p>
                 </div>
-                <button onClick={() => setIsModalOpen(true)} className="bg-brand-green hover:bg-brand-green/90 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2">
+                <button onClick={() => setIsModalOpen(true)} className="bg-violet-600 hover:bg-violet-600/90 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2">
                     <Plus className="w-4 h-4" /> Novo Empréstimo
                 </button>
             </div>
@@ -343,7 +343,7 @@ export default function LoansPage() {
                 {loading ? (
                     <p>A carregar empréstimos...</p>
                 ) : (
-                    <div className="space-y-6">
+                    <div className="space-y-6 bg-white rounded-lg">
                         {loans.length > 0 ? loans.map(loan => (
                             <LoanListItem key={loan.id} loan={loan} onDelete={handleDeleteLoan} />
                         )) : <p className="text-gray-text">Nenhum empréstimo cadastrado.</p>}
