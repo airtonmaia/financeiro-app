@@ -51,7 +51,7 @@ function NavLink({ href, icon: Icon, text, active }: { href: string; icon: React
           : 'text-gray-text hover:bg-gray-100 hover:text-dark-text dark:hover:bg-dark-tertiary dark:hover:text-white'
       }`}
     >
-      <Icon className="w-5 h-5" />
+      <Icon className="w-5 h-5 text-gray-400" />
       <span className="ml-4 hidden lg:block">{text}</span>
     </Link>
   );
@@ -75,7 +75,7 @@ function NavGroup({ icon: Icon, text, subItems, activeSubItem }: { icon: React.E
                 <ChevronDown className={`w-4 h-4 transition-transform hidden lg:block ${isOpen ? 'rotate-180' : ''}`} />
             </button>
             {isOpen && (
-                <div className="mt-2 pl-6 lg:pl-8 space-y-1 ">
+                <div className="mt-2 pl-4 text-sm text-gray-400">
                     {subItems.map(item => (
                         <NavLink 
                             key={item.text}
@@ -103,7 +103,7 @@ export default function Sidebar() {
                         <span className="ml-1 text-xl font-bold hidden lg:block text-brand-primary dark:text-light-text">Agência 360</span>
                     </Link>
                 </div>
-                <nav className="flex flex-col space-y-2 text-gray-700 hover:text-gray-900">
+                <nav className="flex flex-col space-y-2 text-sm ">
                     {navItems.map((item) => (
                         item.subItems ? (
                             <NavGroup 
