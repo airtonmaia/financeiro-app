@@ -38,6 +38,10 @@ export type Project = {
   clientes: { 
     nome: string;
   } | null;
+  quadro_id?: string;
+  subtarefas?: Subtask[];
+  prioridade?: 'Baixa' | 'Média' | 'Alta' | null; // NOVO
+  responsaveis?: string | null; // NOVO
 };
 
 export type Subtask = {
@@ -49,7 +53,6 @@ export type Subtask = {
   created_at: string;
 };
 
-// ATUALIZAÇÃO: Adicionados campos para recorrência
 export type Transacao = {
     id: string;
     descricao: string;
@@ -64,4 +67,28 @@ export type Transacao = {
     frequencia?: string;
     projetos?: { descricao: string } | null;
     clientes?: { nome: string } | null;
+};
+
+export type Quadro = {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  cor: string;
+  imagem_cover_url: string | null;
+};
+
+export type ProjectStatus = {
+  id: string;
+  name: string;
+  color: string;
+  is_default: boolean;
+  quadro_id: string;
+  display_order: number;
+  is_final_status?: boolean;
+};
+
+export type Categoria = {
+    id: string;
+    nome: string;
+    tipo: 'projeto' | 'receita' | 'despesa' | 'emprestimo';
 };

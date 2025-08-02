@@ -12,6 +12,7 @@ import { Plus, Edit, Trash2 } from 'lucide-react';
 type Quadro = {
   id: string;
   nome: string;
+  descricao: string | null;
   cor: string;
   imagem_cover_url: string | null;
 };
@@ -37,6 +38,8 @@ function BoardCard({ board, onEdit, onDelete }: { board: Quadro; onEdit: (board:
                     />
                     <div className="bg-white dark:bg-dark-secondary p-4">
                         <h3 className="font-bold text-dark-text dark:text-light-text truncate">{board.nome}</h3>
+                        {/* MODIFICADO: Exibe a descrição do quadro no cartão */}
+                        {board.descricao && <p className="text-sm text-gray-text truncate mt-1">{board.descricao}</p>}
                     </div>
                 </div>
             </Link>
@@ -46,15 +49,27 @@ function BoardCard({ board, onEdit, onDelete }: { board: Quadro; onEdit: (board:
 
 function BoardModal({ isOpen, onClose, onSave, boardToEdit }: { isOpen: boolean; onClose: () => void; onSave: (board: Partial<Quadro>) => void; boardToEdit: Quadro | null; }) {
     const [nome, setNome] = useState('');
-    const [cor, setCor] = useState('#6B7280');
+    const [descricao, setDescricao] = useState('');
+    const [cor, setCor] = useState('#3B82F6');
+
+    const predefinedColors = [
+        { name: 'Azul', value: '#3B82F6' },
+        { name: 'Roxo', value: '#8B5CF6' },
+        { name: 'Verde', value: '#22C55E' },
+        { name: 'Vermelho', value: '#EF4444' },
+        { name: 'Amarelo', value: '#F59E0B' },
+        { name: 'Índigo', value: '#6366F1' },
+    ];
 
     useEffect(() => {
         if (boardToEdit) {
             setNome(boardToEdit.nome);
+            setDescricao(boardToEdit.descricao || '');
             setCor(boardToEdit.cor);
         } else {
             setNome('');
-            setCor('#6B7280');
+            setDescricao('');
+            setCor(predefinedColors[0].value);
         }
     }, [boardToEdit, isOpen]);
 
@@ -62,31 +77,60 @@ function BoardModal({ isOpen, onClose, onSave, boardToEdit }: { isOpen: boolean;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave({ id: boardToEdit?.id, nome, cor });
+        onSave({ id: boardToEdit?.id, nome, descricao, cor });
     };
 
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
             <div className="bg-white dark:bg-dark-secondary p-8 rounded-xl shadow-lg w-full max-w-md">
-                <h2 className="text-xl font-bold mb-6">{boardToEdit ? 'Editar Quadro' : 'Criar Novo Quadro'}</h2>
+                <h2 className="text-xl font-bold mb-6">{boardToEdit ? 'Editar Quadro' : 'Novo Quadro'}</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label htmlFor="board-name" className="block text-sm font-medium text-gray-text mb-1">Nome do Quadro*</label>
-                        <input type="text" id="board-name" value={nome} onChange={(e) => setNome(e.target.value)} required className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg" />
+                        <label htmlFor="board-name" className="block text-sm font-medium text-gray-text mb-1">Título*</label>
+                        <input type="text" id="board-name" value={nome} onChange={(e) => setNome(e.target.value)} required className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg" placeholder="Digite o título do quadro" />
                     </div>
                     <div>
-                        <label htmlFor="board-color" className="block text-sm font-medium text-gray-text mb-1">Cor</label>
-                        <input type="color" id="board-color" value={cor} onChange={(e) => setCor(e.target.value)} className="w-full h-10 p-1 bg-gray-50 dark:bg-dark-tertiary border rounded-lg cursor-pointer" />
+                        <label htmlFor="board-description" className="block text-sm font-medium text-gray-text mb-1">Descrição</label>
+                        <textarea id="board-description" value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={3} className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg" placeholder="Descreva o propósito do quadro"></textarea>
+                    </div>
+                    <div>
+                         <label className="block text-sm font-medium text-gray-text mb-2">Cor do Quadro</label>
+                         <div className="grid grid-cols-3 gap-2">
+                             {predefinedColors.map(colorOption => (
+                                 <button
+                                     type="button"
+                                     key={colorOption.name}
+                                     onClick={() => setCor(colorOption.value)}
+                                     className={`p-2 rounded-lg border-2 flex items-center gap-2 ${cor === colorOption.value ? 'border-violet-600' : 'border-gray-200 dark:border-dark-tertiary'}`}
+                                 >
+                                     <span className="w-5 h-5 rounded-full" style={{ backgroundColor: colorOption.value }}></span>
+                                     <span className="text-sm">{colorOption.name}</span>
+                                 </button>
+                             ))}
+                             <div className={`p-2 rounded-lg border-2 flex items-center gap-2 relative ${!predefinedColors.some(pc => pc.value === cor) ? 'border-violet-600' : 'border-gray-200 dark:border-dark-tertiary'}`}>
+                                 <input
+                                     type="color"
+                                     value={cor}
+                                     onChange={(e) => setCor(e.target.value)}
+                                     className="w-5 h-5 p-0 border-none rounded cursor-pointer bg-transparent absolute opacity-0"
+                                 />
+                                  <span className="w-5 h-5 rounded-full" style={{ backgroundColor: cor }}></span>
+                                 <span className="text-sm">Outra</span>
+                             </div>
+                         </div>
                     </div>
                     <div className="flex justify-end gap-4 pt-4">
                         <button type="button" onClick={onClose} className="bg-gray-200 dark:bg-dark-tertiary font-semibold py-2 px-6 rounded-lg">Cancelar</button>
-                        <button type="submit" className="bg-brand-primary text-white font-semibold py-2 px-6 rounded-lg">Salvar</button>
+                        <button type="submit" className="bg-black text-white font-semibold py-2 px-6 rounded-lg">
+                           {boardToEdit ? 'Salvar Alterações' : 'Criar Quadro'}
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     );
 }
+
 
 // --- PÁGINA PRINCIPAL ---
 export default function ProjectBoardsPage() {
@@ -119,12 +163,12 @@ export default function ProjectBoardsPage() {
 
   const handleSaveBoard = async (boardData: Partial<Quadro>) => {
       if (boardToEdit) { // Editando
-          const { error } = await supabase.from('quadros').update({ nome: boardData.nome, cor: boardData.cor }).eq('id', boardToEdit.id);
+          const { error } = await supabase.from('quadros').update({ nome: boardData.nome, descricao: boardData.descricao, cor: boardData.cor }).eq('id', boardToEdit.id);
           if (!error) fetchBoards();
       } else { // Criando
           const { data: { user } } = await supabase.auth.getUser();
           if (!user) return;
-          const { error } = await supabase.from('quadros').insert({ nome: boardData.nome, cor: boardData.cor, user_id: user.id });
+          const { error } = await supabase.from('quadros').insert({ nome: boardData.nome, descricao: boardData.descricao, cor: boardData.cor, user_id: user.id });
           if (!error) fetchBoards();
       }
       setIsModalOpen(false);
