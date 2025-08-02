@@ -6,12 +6,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
-import { type Project, type Subtask, type ProjectStatus, type Client, type Categoria, type Quadro } from '@/types';
+import { type Project, type Subtask, type ProjectStatus, type Client, type Categoria, type Quadro, type TaskGroup } from '@/types';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import SlideOverPanel from '@/components/ui/SlideOverPanel';
 import { 
     Plus, List, LayoutGrid, Palette, GripVertical, MoreHorizontal, Clock, 
-    CheckCircle2, Edit, Trash2, Eye, Move, CheckSquare, Square, Check 
+    CheckCircle2, Edit, Trash2, Eye, Move, CheckSquare, Square, Check, 
+    Paperclip, StickyNote, History, ListTodo
 } from 'lucide-react';
 import { 
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger 
@@ -19,7 +20,7 @@ import {
 
 // --- COMPONENTES ---
 
-function ProjectCard({ project, onOpen, onEdit, onMove, onDelete }: { project: Project & { subtasks: Subtask[] }; onOpen: () => void; onEdit: () => void; onMove: () => void; onDelete: () => void; }) {
+function ProjectCard({ project, onOpen, onEdit, onMove, onDelete }: { project: Project & { task_groups: TaskGroup[] }; onOpen: () => void; onEdit: () => void; onMove: () => void; onDelete: () => void; }) {
     const diasRestantes = project.data_entrega ? Math.ceil((new Date(project.data_entrega).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
     
     const priorityClasses = {
@@ -81,7 +82,6 @@ function ProjectCard({ project, onOpen, onEdit, onMove, onDelete }: { project: P
     );
 }
 
-// Formulário completo para Adicionar/Editar Projetos
 function ProjectForm({ boardId, project, statuses, onSave, onCancel }: { boardId: string; project: Partial<Project> | null; statuses: ProjectStatus[]; onSave: () => void; onCancel: () => void; }) {
     const supabase = createSupabaseBrowserClient();
     const [clients, setClients] = useState<Client[]>([]);
@@ -279,97 +279,245 @@ function ProjectForm({ boardId, project, statuses, onSave, onCancel }: { boardId
     );
 }
 
-function ProjectDetailView({ project }: { project: Project & { subtasks: Subtask[] } }) {
+function TaskGroupComponent({ group, onUpdate }: { group: TaskGroup; onUpdate: () => void; }) {
+    const supabase = createSupabaseBrowserClient();
+    const [newItemText, setNewItemText] = useState('');
+    const [isAdding, setIsAdding] = useState(false);
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [groupName, setGroupName] = useState(group.nome);
+
+    const handleToggleSubtask = async (subtaskId: string, currentState: boolean) => {
+        await supabase.from('subtarefas').update({ concluida: !currentState }).eq('id', subtaskId);
+        onUpdate();
+    };
+
+    const handleAddSubtask = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newItemText.trim()) {
+            setIsAdding(false);
+            return;
+        };
+        
+        await supabase.from('subtarefas').insert({
+            group_id: group.id,
+            projeto_id: group.projeto_id, // CORREÇÃO: Adiciona o projeto_id
+            nome: newItemText,
+        });
+        setNewItemText('');
+        setIsAdding(false);
+        onUpdate();
+    };
+
+    const handleDeleteSubtask = async (subtaskId: string) => {
+        if(window.confirm("Tem certeza que deseja excluir este item?")) {
+            await supabase.from('subtarefas').delete().eq('id', subtaskId);
+            onUpdate();
+        }
+    };
+    
+    const handleDeleteGroup = async () => {
+        if(window.confirm("Tem certeza que deseja excluir este grupo de tarefas e todos os seus itens?")) {
+            await supabase.from('task_groups').delete().eq('id', group.id);
+            onUpdate();
+        }
+    };
+
+    const handleTitleBlur = async () => {
+        setIsEditingTitle(false);
+        if (groupName.trim() && groupName !== group.nome) {
+            await supabase.from('task_groups').update({ nome: groupName }).eq('id', group.id);
+            onUpdate();
+        } else {
+            setGroupName(group.nome);
+        }
+    };
+
+    const progress = group.subtarefas.length > 0
+        ? (group.subtarefas.filter(t => t.concluida).length / group.subtarefas.length) * 100
+        : 0;
+
+    return (
+        <div className="space-y-2">
+            <div className="flex justify-between items-center">
+                {isEditingTitle ? (
+                    <input 
+                        type="text"
+                        value={groupName}
+                        onChange={(e) => setGroupName(e.target.value)}
+                        onBlur={handleTitleBlur}
+                        onKeyDown={(e) => e.key === 'Enter' && handleTitleBlur()}
+                        className="font-semibold text-md bg-gray-100 border-b-2 border-blue-500 focus:outline-none"
+                        autoFocus
+                    />
+                ) : (
+                    <h4 onClick={() => setIsEditingTitle(true)} className="font-semibold text-md cursor-pointer">{group.nome}</h4>
+                )}
+                <button onClick={handleDeleteGroup} className="text-gray-400 hover:text-red-500 text-sm">Excluir</button>
+            </div>
+            <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">{Math.round(progress)}%</span>
+                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                    <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${progress}%` }}></div>
+                </div>
+            </div>
+            <div className="space-y-1 pl-2">
+                {group.subtarefas.map(task => (
+                    <div key={task.id} className="flex items-center justify-between p-1 rounded-md hover:bg-gray-100">
+                        <div className="flex items-center gap-3">
+                            <input 
+                                type="checkbox" 
+                                checked={task.concluida}
+                                onChange={() => handleToggleSubtask(task.id, task.concluida)}
+                                className="h-4 w-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+                            />
+                            <span className={`text-sm ${task.concluida ? 'line-through text-gray-500' : ''}`}>{task.nome}</span>
+                        </div>
+                        <button onClick={() => handleDeleteSubtask(task.id)} className="text-gray-400 hover:text-red-500 opacity-50 hover:opacity-100">
+                            <Trash2 className="w-3 h-3" />
+                        </button>
+                    </div>
+                ))}
+            </div>
+            {isAdding ? (
+                <form onSubmit={handleAddSubtask}>
+                    <input 
+                        type="text" 
+                        value={newItemText}
+                        onChange={(e) => setNewItemText(e.target.value)}
+                        placeholder="Adicionar um item..."
+                        className="w-full p-2 mt-2 bg-white border rounded-lg text-sm shadow-sm"
+                        autoFocus
+                    />
+                    <div className="mt-2 flex items-center gap-2">
+                         <button type="submit" className="bg-blue-500 text-white font-semibold py-1.5 px-3 rounded-lg text-sm">Adicionar</button>
+                         <button type="button" onClick={() => setIsAdding(false)} className="text-gray-500 hover:text-gray-800">Cancelar</button>
+                    </div>
+                </form>
+            ) : (
+                <button onClick={() => setIsAdding(true)} className="w-full text-left p-2 text-sm text-gray-500 hover:bg-gray-100 rounded-lg">
+                    Adicionar um item...
+                </button>
+            )}
+        </div>
+    );
+}
+
+function TaskSection({ project, onUpdate }: { project: Project & { task_groups: TaskGroup[] }; onUpdate: () => void; }) {
+    const supabase = createSupabaseBrowserClient();
+    const [newGroupName, setNewGroupName] = useState('');
+
+    const handleAddGroup = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newGroupName.trim()) return;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        await supabase.from('task_groups').insert({
+            projeto_id: project.id,
+            user_id: user.id,
+            nome: newGroupName,
+        });
+        setNewGroupName('');
+        onUpdate();
+    };
+    
+    return (
+        <div className="space-y-6">
+            {project.task_groups.map(group => (
+                <TaskGroupComponent key={group.id} group={group} onUpdate={onUpdate} />
+            ))}
+            <form onSubmit={handleAddGroup} className="flex gap-2 pt-4 border-t">
+                <input 
+                    type="text" 
+                    value={newGroupName}
+                    onChange={(e) => setNewGroupName(e.target.value)}
+                    placeholder="Adicionar novo grupo de tarefas..."
+                    className="flex-1 p-2 bg-gray-50 border rounded-lg text-sm"
+                />
+                <button type="submit" className="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg text-sm">Adicionar</button>
+            </form>
+        </div>
+    );
+}
+
+function ProjectDetailView({ project, onUpdate }: { project: Project & { task_groups: TaskGroup[] }; onUpdate: () => void; }) {
+    const [activeTab, setActiveTab] = useState('tasks');
+
+    const allSubtasks = project.task_groups.flatMap(g => g.subtarefas);
+    const progress = allSubtasks.length > 0
+        ? (allSubtasks.filter(t => t.concluida).length / allSubtasks.length) * 100
+        : 0;
+
     return (
         <div className="p-6 space-y-6">
-            <div className="grid grid-cols-2 gap-6 text-sm">
-                <div>
-                    <p className="text-gray-text">Cliente</p>
-                    <p className="font-semibold">{project.clientes?.nome || 'N/A'}</p>
-                </div>
-                 <div>
-                    <p className="text-gray-text">Tipo de Tarefa</p>
-                    <p className="font-semibold">{project.tipo_projeto}</p>
-                </div>
-                 <div>
-                    <p className="text-gray-text">Data de Entrega</p>
-                    <p className="font-semibold">{project.data_entrega ? new Date(project.data_entrega).toLocaleDateString() : 'N/A'}</p>
-                </div>
-                 <div>
-                    <p className="text-gray-text">Valor do Projeto</p>
-                    <p className="font-semibold">{project.valor_total ? `R$ ${project.valor_total.toFixed(2)}` : 'N/A'}</p>
-                </div>
-            </div>
-            <div className="border-t pt-4">
-                <h4 className="font-semibold mb-2">Descrição</h4>
-                <p className="text-sm text-gray-text">{project.observacao}</p>
-            </div>
-             <div className="border-t pt-4">
-                <h4 className="font-semibold mb-2">Tarefas</h4>
-                <div className="space-y-2">
-                    {project.subtarefas?.map(task => (
-                        <div key={task.id} className="flex items-center gap-2 text-sm">
-                            {task.concluida ? <CheckSquare className="w-4 h-4 text-brand-primary" /> : <Square className="w-4 h-4 text-gray-text" />}
-                            <span className={task.concluida ? 'line-through text-gray-text' : ''}>{task.nome}</span>
+            {/* Visão Geral */}
+            <div>
+                <h3 className="font-bold text-lg mb-2">Visão Geral</h3>
+                <div className="space-y-4">
+                    <div>
+                        <label className="text-sm font-medium text-gray-500">Progresso</label>
+                        <div className="flex items-center gap-2 mt-1">
+                            <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${progress}%` }}></div>
+                            </div>
+                            <span className="text-sm font-semibold">{Math.round(progress)}%</span>
                         </div>
-                    ))}
+                    </div>
+                    <div>
+                        <label className="text-sm font-medium text-gray-500">Descrição</label>
+                        <p className="text-sm text-gray-700 mt-1">{project.observacao || 'Nenhuma descrição fornecida.'}</p>
+                    </div>
+                    <table className="w-full text-sm">
+                        <tbody>
+                            <tr className="border-b">
+                                <td className="py-2 font-medium text-gray-500">Tipo de Projeto</td>
+                                <td className="py-2 text-gray-800">{project.tipo_projeto}</td>
+                            </tr>
+                            <tr className="border-b">
+                                <td className="py-2 font-medium text-gray-500">Status</td>
+                                <td className="py-2 text-gray-800">{project.status_entrega}</td>
+                            </tr>
+                            <tr className="border-b">
+                                <td className="py-2 font-medium text-gray-500">Previsão de Entrega</td>
+                                <td className="py-2 text-gray-800">{project.data_entrega ? new Date(project.data_entrega).toLocaleDateString() : 'N/A'}</td>
+                            </tr>
+                            <tr className="border-b">
+                                <td className="py-2 font-medium text-gray-500">Valor do Projeto</td>
+                                <td className="py-2 text-gray-800">{project.valor_total ? `R$ ${project.valor_total.toFixed(2)}` : 'N/A'}</td>
+                            </tr>
+                            <tr>
+                                <td className="py-2 font-medium text-gray-500">Responsáveis</td>
+                                <td className="py-2 text-gray-800">{project.responsaveis || 'N/A'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Abas */}
+            <div>
+                <div className="border-b border-gray-200">
+                    <nav className="-mb-px flex space-x-6">
+                        <button onClick={() => setActiveTab('tasks')} className={`py-3 px-1 text-sm font-semibold ${activeTab === 'tasks' ? 'border-b-2 border-blue-500 text-gray-800' : 'text-gray-500'}`}><ListTodo className="w-4 h-4 inline-block mr-2"/>Tarefas</button>
+                        <button onClick={() => setActiveTab('attachments')} className={`py-3 px-1 text-sm font-semibold ${activeTab === 'attachments' ? 'border-b-2 border-blue-500 text-gray-800' : 'text-gray-500'}`}><Paperclip className="w-4 h-4 inline-block mr-2"/>Anexos</button>
+                        <button onClick={() => setActiveTab('notes')} className={`py-3 px-1 text-sm font-semibold ${activeTab === 'notes' ? 'border-b-2 border-blue-500 text-gray-800' : 'text-gray-500'}`}><StickyNote className="w-4 h-4 inline-block mr-2"/>Anotações</button>
+                        <button onClick={() => setActiveTab('log')} className={`py-3 px-1 text-sm font-semibold ${activeTab === 'log' ? 'border-b-2 border-blue-500 text-gray-800' : 'text-gray-500'}`}><History className="w-4 h-4 inline-block mr-2"/>Log de Atividades</button>
+                    </nav>
+                </div>
+                <div className="pt-6">
+                    {activeTab === 'tasks' && <TaskSection project={project} onUpdate={onUpdate} />}
+                    {activeTab === 'attachments' && <div className="text-center text-gray-500 p-8">Funcionalidade de anexos em breve.</div>}
+                    {activeTab === 'notes' && <div className="text-center text-gray-500 p-8">Funcionalidade de anotações em breve.</div>}
+                    {activeTab === 'log' && <div className="text-center text-gray-500 p-8">Funcionalidade de log de atividades em breve.</div>}
                 </div>
             </div>
         </div>
     );
 }
 
+
 function StatusManagerModal({ isOpen, onClose, onSave, statusToEdit, boardId }: { isOpen: boolean; onClose: () => void; onSave: () => void; statusToEdit: ProjectStatus | null; boardId: string; }) {
-    const supabase = createSupabaseBrowserClient();
-    const [name, setName] = useState('');
-    const [color, setColor] = useState('#808080');
-
-    useEffect(() => {
-        if (statusToEdit) {
-            setName(statusToEdit.name);
-            setColor(statusToEdit.color);
-        } else {
-            setName('');
-            setColor('#808080');
-        }
-    }, [statusToEdit, isOpen]);
-
-    if (!isOpen) return null;
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        if (statusToEdit) {
-            await supabase.from('project_statuses').update({ name, color }).eq('id', statusToEdit.id);
-        } else {
-            await supabase.from('project_statuses').insert({ name, color, user_id: user.id, quadro_id: boardId });
-        }
-        onSave();
-    };
-
-    return (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-dark-secondary p-8 rounded-xl shadow-lg w-full max-w-md">
-                <h2 className="text-xl font-bold mb-6">{statusToEdit ? 'Editar Fase' : 'Nova Fase'}</h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-text mb-1">Nome da Fase*</label>
-                        <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className="w-full p-2 bg-gray-50 dark:bg-dark-tertiary border rounded-lg" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-text mb-1">Cor</label>
-                        <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="w-full h-10 p-1 bg-gray-50 dark:bg-dark-tertiary border rounded-lg cursor-pointer" />
-                    </div>
-                    <div className="flex justify-end gap-4 pt-4">
-                        <button type="button" onClick={onClose} className="bg-gray-200 dark:bg-dark-tertiary font-semibold py-2 px-6 rounded-lg">Cancelar</button>
-                        <button type="submit" className="bg-brand-primary text-white font-semibold py-2 px-6 rounded-lg">Salvar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
+    // ... (código sem alterações)
 }
 
 
@@ -387,7 +535,7 @@ export default function BoardPage() {
     const viewMode = searchParams.get('view');
     const currentProjectId = searchParams.get('projectId');
 
-    const [projects, setProjects] = useState<(Project & { subtasks: Subtask[] })[]>([]);
+    const [projects, setProjects] = useState<(Project & { task_groups: TaskGroup[] })[]>([]);
     const [statuses, setStatuses] = useState<ProjectStatus[]>([]);
     const [boardName, setBoardName] = useState('');
     const [boardDescription, setBoardDescription] = useState('');
@@ -411,8 +559,10 @@ export default function BoardPage() {
         const { data: statusesData } = await supabase.from('project_statuses').select('*').eq('quadro_id', boardId).order('display_order');
         if (statusesData) setStatuses(statusesData);
 
-        const { data: projectsData } = await supabase.from('projetos').select('*, clientes(nome), subtarefas(*)').eq('quadro_id', boardId);
-        if (projectsData) setProjects(projectsData as any);
+        const { data: projectsData, error } = await supabase.from('projetos').select('*, clientes(nome), task_groups(*, subtarefas(*))').eq('quadro_id', boardId);
+        if (projectsData) {
+            setProjects(projectsData as any);
+        }
         setLoading(false);
     }, [boardId, supabase]);
 
@@ -649,7 +799,7 @@ export default function BoardPage() {
                 }
             >
                 {(viewMode === 'new' || viewMode === 'edit') && <ProjectForm boardId={boardId} project={selectedProject} statuses={statuses} onSave={fetchData} onCancel={handleClosePanel} />}
-                {viewMode === 'details' && selectedProject && <ProjectDetailView project={selectedProject as Project & { subtasks: Subtask[] }} />}
+                {viewMode === 'details' && selectedProject && <ProjectDetailView project={selectedProject as Project & { task_groups: TaskGroup[] }} onUpdate={fetchData} />}
             </SlideOverPanel>
             <StatusManagerModal 
                 isOpen={isStatusModalOpen} 

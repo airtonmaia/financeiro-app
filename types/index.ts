@@ -18,6 +18,23 @@ export type Parcela = {
     pago: boolean;
 };
 
+// NOVO: Tipo para Grupo de Tarefas
+export type TaskGroup = {
+  id: string;
+  projeto_id: string;
+  nome: string;
+  subtarefas: Subtask[];
+};
+
+export type Subtask = {
+  id: string;
+  group_id: string; // MODIFICADO: Referencia o grupo
+  nome: string;
+  status: string;
+  concluida: boolean;
+  created_at: string;
+};
+
 export type Project = {
   id: string;
   created_at: string;
@@ -39,18 +56,9 @@ export type Project = {
     nome: string;
   } | null;
   quadro_id?: string;
-  subtarefas?: Subtask[];
-  prioridade?: 'Baixa' | 'Média' | 'Alta' | null; // NOVO
-  responsaveis?: string | null; // NOVO
-};
-
-export type Subtask = {
-  id: string;
-  projeto_id: string;
-  nome: string;
-  status: string;
-  concluida: boolean;
-  created_at: string;
+  prioridade?: 'Baixa' | 'Média' | 'Alta' | null;
+  responsaveis?: string | null;
+  task_groups: TaskGroup[]; // MODIFICADO: Usa a nova estrutura
 };
 
 export type Transacao = {
