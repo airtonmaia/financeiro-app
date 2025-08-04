@@ -17,10 +17,10 @@ type Categoria = { id: string; nome: string; tipo: string; };
 // --- COMPONENTES ---
 
 function StatCard({ title, value, isPositive }: { title: string; value: string; isPositive?: boolean; }) {
-    const colorClass = isPositive === true ? 'text-success-text' : isPositive === false ? 'text-danger-text' : 'text-dark-text dark:text-light-text';
+    const colorClass = isPositive === true ? 'text-green-500' : isPositive === false ? 'text-red-500' : 'text-gray-800 dark:text-white';
     return (
         <div className="bg-white dark:bg-dark-secondary p-5 rounded-xl shadow-sm">
-            <p className="text-gray-text text-sm">{title}</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">{title}</p>
             <p className={`text-2xl font-bold mt-1 ${colorClass}`}>{value}</p>
         </div>
     );
@@ -31,21 +31,21 @@ function TransactionListItem({ t, onStatusChange, onEdit, onDelete }: { t: Trans
     const isPaid = t.status === 'Pago';
 
     return (
-        <div className="border-b border-light-tertiary dark:border-dark-tertiary last:border-b-0">
+        <div className="border-b border-gray-100 dark:border-dark-tertiary last:border-b-0">
             <div className="hidden md:grid md:grid-cols-12 gap-4 items-center py-4 px-5 hover:bg-gray-50 dark:hover:bg-dark-tertiary/50 transition-colors text-sm">
                 <div className="col-span-4 flex items-center gap-3">
                     <div className={`p-2 rounded-full ${isIncome ? 'bg-green-100 dark:bg-green-900/50' : 'bg-red-100 dark:bg-red-900/50'}`}>
-                        {isIncome ? <ArrowUp className="w-4 h-4 text-success-text" /> : <ArrowDown className="w-4 h-4 text-danger-text" />}
+                        {isIncome ? <ArrowUp className="w-4 h-4 text-green-500" /> : <ArrowDown className="w-4 h-4 text-red-500" />}
                     </div>
                     <div>
-                        <a onClick={() => onEdit(t)} className="font-semibold text-dark-text dark:text-light-text cursor-pointer hover:underline">{t.descricao}</a>
-                        <p className="text-xs text-gray-text dark:text-gray-400">
+                        <a onClick={() => onEdit(t)} className="font-semibold text-gray-800 dark:text-light-text cursor-pointer hover:underline">{t.descricao}</a>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                             {t.projetos?.descricao || 'Geral'}
                         </p>
                     </div>
                 </div>
-                <div className="col-span-2 text-gray-text dark:text-gray-400">{t.categoria}</div>
-                <div className="col-span-2 text-gray-text dark:text-gray-400">{new Date(t.data).toLocaleDateString()}</div>
+                <div className="col-span-2 text-gray-500 dark:text-gray-400">{t.categoria}</div>
+                <div className="col-span-2 text-gray-500 dark:text-gray-400">{new Date(t.data).toLocaleDateString()}</div>
                 <div className="col-span-2">
                     <button
                       onClick={() => onStatusChange(t.id, isPaid ? 'Pendente' : 'Pago')}
@@ -53,17 +53,17 @@ function TransactionListItem({ t, onStatusChange, onEdit, onDelete }: { t: Trans
                       title={`Marcar como ${isPaid ? 'Pendente' : 'Pago'}`}
                     >
                       <span className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${isPaid ? 'translate-x-6' : ''}`}>
-                        {isPaid && <Check className="w-3 h-3 text-brand-green translate-x-0.5 translate-y-0.5" />}
+                        {isPaid && <Check className="w-3 h-3 text-violet-700 translate-x-0.5 translate-y-0.5" />}
                       </span>
                     </button>
                 </div>
-                <div className={`col-span-1 font-semibold ${isIncome ? 'text-success-text' : 'text-danger-text'}`}>
+                <div className={`col-span-1 font-semibold ${isIncome ? 'text-green-500' : 'text-red-500'}`}>
                     {isIncome ? '+' : '-'} R$ {t.valor.toFixed(2)}
                 </div>
                 <div className="col-span-1 flex justify-end">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <button className="p-2 text-gray-text hover:bg-gray-200 dark:hover:bg-dark-tertiary rounded-full">
+                            <button className="p-2 text-gray-500 hover:bg-gray-200 dark:hover:bg-dark-tertiary rounded-full">
                                 <MoreHorizontal className="w-4 h-4" />
                             </button>
                         </DropdownMenuTrigger>
@@ -195,7 +195,7 @@ function TransactionModal({ isOpen, onClose, onSave, transactionToEdit }: { isOp
                                       className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ease-in-out ${recorrente ? 'bg-violet-600' : 'bg-gray-300 dark:bg-dark-tertiary'}`}
                                     >
                                       <span className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${recorrente ? 'translate-x-6' : ''}`}>
-                                        {recorrente && <Check className="w-3 h-3 text-brand-green translate-x-0.5 translate-y-0.5" />}
+                                        {recorrente && <Check className="w-3 h-3 text-violet-700 translate-x-0.5 translate-y-0.5" />}
                                       </span>
                                     </button>
                                 </div>
@@ -297,7 +297,10 @@ export default function CashFlowPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 <StatCard title="Receita Recebida" value={`R$ ${receitaRecebida.toFixed(2)}`} isPositive={true} />
                 <StatCard title="Despesa Paga" value={`R$ ${despesaPaga.toFixed(2)}`} isPositive={false} />
-                <StatCard title="Saldo Atual" value={`R$ ${saldoAtual.toFixed(2)}`} />
+                <div className="bg-violet-700 text-white p-5 rounded-xl shadow-sm">
+                    <p className="text-white/80 text-sm">Saldo Atual</p>
+                    <p className="text-2xl font-bold mt-1">{`R$ ${saldoAtual.toFixed(2)}`}</p>
+                </div>
                 <StatCard title="A Receber" value={`R$ ${aReceber.toFixed(2)}`} />
                 <StatCard title="A Pagar" value={`R$ ${aPagar.toFixed(2)}`} />
             </div>
