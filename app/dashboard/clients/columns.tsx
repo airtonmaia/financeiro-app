@@ -69,7 +69,9 @@ export const columns: ColumnDef<Client>[] = [
   {
     id: "acoes",
     header: "Ações",
-    cell: ({ row }) => (
+    // A correção foi feita aqui:
+    // A função 'cell' agora recebe '{ row, table }' para ter acesso à instância da tabela.
+    cell: ({ row, table }) => (
       <div className="flex gap-2 text-sm">
         <Link href={`/dashboard/clients/${row.original.id}/edit`} className="hover:underline">ver</Link>
         <span>|</span>
@@ -77,7 +79,8 @@ export const columns: ColumnDef<Client>[] = [
         <span>|</span>
         <button
           className="text-destructive hover:underline"
-          onClick={() => row.table.options.meta?.deleteClient(row.original.id)}
+          // Agora usamos 'table' diretamente, que foi recebido nos parâmetros da célula.
+          onClick={() => table.options.meta?.deleteClient(row.original.id)}
         >
           excluir
         </button>
