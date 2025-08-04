@@ -6,7 +6,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { type Transacao, type Client, type Project } from '@/types';
-import { Plus, ArrowUp, ArrowDown, MoreHorizontal, Check, Search } from 'lucide-react';
+import { Plus, ArrowUp, ArrowDown, MoreHorizontal, Check, Search, Edit, Trash2, Eye } from 'lucide-react';
+import { 
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
 
 // Definindo o tipo para as categorias aqui para simplicidade
 type Categoria = { id: string; nome: string; tipo: string; };
@@ -23,20 +26,19 @@ function StatCard({ title, value, isPositive }: { title: string; value: string; 
     );
 }
 
-function TransactionListItem({ t, onStatusChange }: { t: Transacao; onStatusChange: (id: string, newStatus: 'Pago' | 'Pendente') => void; }) {
+function TransactionListItem({ t, onStatusChange, onEdit, onDelete }: { t: Transacao; onStatusChange: (id: string, newStatus: 'Pago' | 'Pendente') => void; onEdit: (transaction: Transacao) => void; onDelete: (id: string) => void; }) {
     const isIncome = t.tipo === 'Receita';
     const isPaid = t.status === 'Pago';
 
     return (
-        <div className="border-b border-light-tertiaryz dark:border-dark-tertiary last:border-b-0">
-            {/* Layout para Desktop */}
+        <div className="border-b border-light-tertiary dark:border-dark-tertiary last:border-b-0">
             <div className="hidden md:grid md:grid-cols-12 gap-4 items-center py-4 px-5 hover:bg-gray-50 dark:hover:bg-dark-tertiary/50 transition-colors text-sm">
                 <div className="col-span-4 flex items-center gap-3">
                     <div className={`p-2 rounded-full ${isIncome ? 'bg-green-100 dark:bg-green-900/50' : 'bg-red-100 dark:bg-red-900/50'}`}>
                         {isIncome ? <ArrowUp className="w-4 h-4 text-success-text" /> : <ArrowDown className="w-4 h-4 text-danger-text" />}
                     </div>
                     <div>
-                        <p className="font-semibold text-dark-text dark:text-light-text">{t.descricao}</p>
+                        <a onClick={() => onEdit(t)} className="font-semibold text-dark-text dark:text-light-text cursor-pointer hover:underline">{t.descricao}</a>
                         <p className="text-xs text-gray-text dark:text-gray-400">
                             {t.projetos?.descricao || 'Geral'}
                         </p>
@@ -59,16 +61,24 @@ function TransactionListItem({ t, onStatusChange }: { t: Transacao; onStatusChan
                     {isIncome ? '+' : '-'} R$ {t.valor.toFixed(2)}
                 </div>
                 <div className="col-span-1 flex justify-end">
-                    <button className="p-2 text-gray-text hover:bg-gray-200 dark:hover:bg-dark-tertiary rounded-full">
-                        <MoreHorizontal className="w-4 h-4" />
-                    </button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button className="p-2 text-gray-text hover:bg-gray-200 dark:hover:bg-dark-tertiary rounded-full">
+                                <MoreHorizontal className="w-4 h-4" />
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="bg-white">
+                            <DropdownMenuItem onClick={() => onEdit(t)}><Eye className="w-4 h-4 mr-2"/> Ver / Editar</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onDelete(t.id)} className="text-red-500"><Trash2 className="w-4 h-4 mr-2"/> Excluir</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
         </div>
     );
 }
 
-function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () => void; onSave: (data: Omit<Transacao, 'id' | 'projetos' | 'clientes'>) => void; }) {
+function TransactionModal({ isOpen, onClose, onSave, transactionToEdit }: { isOpen: boolean; onClose: () => void; onSave: () => void; transactionToEdit: Transacao | null; }) {
     const supabase = createSupabaseBrowserClient();
     const [descricao, setDescricao] = useState('');
     const [tipo, setTipo] = useState<'Receita' | 'Despesa'>('Receita');
@@ -86,6 +96,32 @@ function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClos
     const [projects, setProjects] = useState<Project[]>([]);
     const [incomeCategories, setIncomeCategories] = useState<Categoria[]>([]);
     const [expenseCategories, setExpenseCategories] = useState<Categoria[]>([]);
+
+    useEffect(() => {
+        if (transactionToEdit) {
+            setDescricao(transactionToEdit.descricao);
+            setTipo(transactionToEdit.tipo);
+            setCategoria(transactionToEdit.categoria);
+            setValor(transactionToEdit.valor);
+            setData(transactionToEdit.data);
+            setClienteId(transactionToEdit.cliente_id);
+            setProjetoId(transactionToEdit.projeto_id);
+            setStatus(transactionToEdit.status);
+            setRecorrente(transactionToEdit.recorrente || false);
+            setFrequencia(transactionToEdit.frequencia || 'Mensal');
+        } else {
+            setDescricao('');
+            setTipo('Receita');
+            setCategoria('');
+            setValor('');
+            setData('');
+            setClienteId(null);
+            setProjetoId(null);
+            setStatus('Pendente');
+            setRecorrente(false);
+            setFrequencia('Mensal');
+        }
+    }, [transactionToEdit, isOpen]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -106,9 +142,21 @@ function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClos
 
     if (!isOpen) return null;
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        onSave({ descricao, tipo, categoria, valor: Number(valor), data, cliente_id, projeto_id, status, recorrente, frequencia });
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const transactionData = {
+            descricao, tipo, categoria, valor: Number(valor), data, cliente_id, projeto_id, status, recorrente, frequencia
+        };
+
+        if (transactionToEdit) {
+            await supabase.from('transacoes').update(transactionData).eq('id', transactionToEdit.id);
+        } else {
+            await supabase.from('transacoes').insert({ ...transactionData, user_id: user.id });
+        }
+        onSave();
     };
     
     const currentCategories = tipo === 'Receita' ? incomeCategories : expenseCategories;
@@ -116,7 +164,7 @@ function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClos
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
             <div className="bg-white dark:bg-dark-secondary p-8 rounded-xl shadow-lg w-full max-w-lg">
-                <h2 className="text-xl font-bold mb-1">Adicionar Transação</h2>
+                <h2 className="text-xl font-bold mb-1">{transactionToEdit ? 'Editar Transação' : 'Adicionar Transação'}</h2>
                 <p className="text-sm text-gray-text mb-6">Registe uma nova receita ou despesa.</p>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -166,10 +214,7 @@ function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClos
                             </div>
                         )}
                     </div>
-                    <div className="flex justify-end gap-4 pt-4">
-                        <button type="button" onClick={onClose} className="bg-gray-200 dark:bg-dark-tertiary font-semibold py-2 px-6 rounded-lg">Cancelar</button>
-                        <button type="submit" className="bg-green-500 text-white font-semibold py-2 px-6 rounded-lg">Adicionar Transação</button>
-                    </div>
+                    <div className="flex justify-end gap-4 pt-4"><button type="button" onClick={onClose} className="bg-gray-200 dark:bg-dark-tertiary font-semibold py-2 px-6 rounded-lg">Cancelar</button><button type="submit" className="bg-violet-700 text-white font-semibold py-2 px-6 rounded-lg">{transactionToEdit ? 'Salvar Alterações' : 'Adicionar Transação'}</button></div>
                 </form>
             </div>
         </div>
@@ -181,11 +226,11 @@ export default function CashFlowPage() {
     const [transactions, setTransactions] = useState<Transacao[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [transactionToEdit, setTransactionToEdit] = useState<Transacao | null>(null);
     const supabase = createSupabaseBrowserClient();
     const [activeTab, setActiveTab] = useState<'Todas' | 'Entradas' | 'Saídas'>('Todas');
     const [searchTerm, setSearchTerm] = useState('');
     
-    // AJUSTE: Inicializa o estado do mês com o mês atual
     const [selectedMonth, setSelectedMonth] = useState(() => {
         const now = new Date();
         const year = now.getFullYear();
@@ -208,21 +253,26 @@ export default function CashFlowPage() {
         return transactions.filter(t => {
             const tabFilter = activeTab === 'Todas' || (activeTab === 'Entradas' && t.tipo === 'Receita') || (activeTab === 'Saídas' && t.tipo === 'Despesa');
             const searchFilter = t.descricao.toLowerCase().includes(searchTerm.toLowerCase());
-            // AJUSTE: O filtro de mês agora funciona por padrão com o mês atual
             const monthFilter = !selectedMonth || t.data.startsWith(selectedMonth);
             return tabFilter && searchFilter && monthFilter;
         });
     }, [transactions, activeTab, searchTerm, selectedMonth]);
 
-    const handleSaveTransaction = async (transactionData: Omit<Transacao, 'id' | 'projetos' | 'clientes'>) => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-        const { error } = await supabase.from('transacoes').insert({ ...transactionData, user_id: user.id });
-        if (!error) {
+    const handleSaveTransaction = () => {
+        fetchTransactions();
+        setIsModalOpen(false);
+        setTransactionToEdit(null);
+    };
+
+    const handleEditTransaction = (transaction: Transacao) => {
+        setTransactionToEdit(transaction);
+        setIsModalOpen(true);
+    };
+
+    const handleDeleteTransaction = async (id: string) => {
+        if (window.confirm("Tem certeza que deseja excluir esta transação?")) {
+            await supabase.from('transacoes').delete().eq('id', id);
             fetchTransactions();
-            setIsModalOpen(false);
-        } else {
-            alert("Erro ao salvar transação: " + error.message);
         }
     };
 
@@ -241,7 +291,7 @@ export default function CashFlowPage() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div><h1 className="text-2xl font-bold">Fluxo de Caixa</h1><p className="text-sm text-gray-text">Controle suas receitas, despesas e fluxo de caixa.</p></div>
-                <button onClick={() => setIsModalOpen(true)} className="bg-violet-700 hover:bg-brand-blue/90 text-white font-semibold py-2 px-4 rounded-md flex items-center gap-2"><Plus className="w-4 h-4" /> Nova Transação</button>
+                <button onClick={() => { setTransactionToEdit(null); setIsModalOpen(true); }} className="bg-violet-700 hover:bg-violet-700/90 text-white font-semibold py-2 px-4 rounded-md flex items-center gap-2"><Plus className="w-4 h-4" /> Nova Transação</button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
@@ -279,15 +329,16 @@ export default function CashFlowPage() {
                     {loading ? (
                         <p className="p-5 text-center text-gray-text">A carregar transações...</p>
                     ) : (
-                        filteredTransactions.map(t => <TransactionListItem key={t.id} t={t} onStatusChange={handleStatusChange} />)
+                        filteredTransactions.map(t => <TransactionListItem key={t.id} t={t} onStatusChange={handleStatusChange} onEdit={handleEditTransaction} onDelete={handleDeleteTransaction} />)
                     )}
                 </div>
             </div>
 
             <TransactionModal 
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                onClose={() => { setIsModalOpen(false); setTransactionToEdit(null); }}
                 onSave={handleSaveTransaction}
+                transactionToEdit={transactionToEdit}
             />
         </div>
     );

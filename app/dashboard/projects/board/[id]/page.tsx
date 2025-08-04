@@ -728,7 +728,7 @@ export default function BoardPage() {
                     </div>
                     <div className="flex items-center gap-2">
                         <button onClick={() => { setStatusToEdit(null); setIsStatusModalOpen(true); }} className="p-2 rounded-lg text-gray-text hover:bg-gray-100" title="Personalizar Quadro"><Palette className="w-5 h-5" /></button>
-                        <button className="p-2 rounded-lg text-gray-text hover:bg-gray-100"><List className="w-5 h-5" /></button>
+                        <button className="p-2 rounded-lg text-gray-text hover:bg-gray-1500"><List className="w-5 h-5" /></button>
                         <button className="p-2 rounded-lg bg-brand-primary/20 text-brand-primary"><LayoutGrid className="w-5 h-5" /></button>
                         <button onClick={() => handleOpenPanel('new')} className="bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2">
                             <Plus className="w-4 h-4" /> Novo Projeto
@@ -747,7 +747,7 @@ export default function BoardPage() {
                                                 <div {...providedDrag.draggableProps} ref={providedDrag.innerRef} className="w-80 flex-shrink-0">
                                                     <Droppable droppableId={status.name} type="CARD">
                                                         {(providedDrop) => (
-                                                            <div ref={providedDrop.innerRef} {...providedDrop.droppableProps} className="bg-gray-100 dark:bg-dark-tertiary rounded-lg p-3 h-full flex flex-col">
+                                                            <div ref={providedDrop.innerRef} {...providedDrop.droppableProps} className="border border-dashed border-gray-300 dark:bg-dark-tertiary rounded-lg p-3 flex flex-col">
                                                                 <div className="flex justify-between items-center mb-3 px-1">
                                                                     <div {...providedDrag.dragHandleProps} className="flex items-center gap-2 cursor-grab p-1">
                                                                         <GripVertical className="w-4 h-4 text-gray-400" />
