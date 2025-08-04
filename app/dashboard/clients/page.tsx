@@ -1,80 +1,82 @@
-// app/dashboard/clients/page.tsx
-// Página para listar, gerir e visualizar os clientes a partir do banco de dados com DataTable.
-
-'use client'; 
-
-import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
-import { createSupabaseBrowserClient } from '@/lib/supabase';
-import { Users, Briefcase, DollarSign, Plus } from 'lucide-react';
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { columns, Client } from "./columns";
-import { DataTable } from "@/components/ui/data-table";
+import { columns } from "./columns"
+import { DataTable } from "@/components/ui/data-table"
+import { createClient } from "@/lib/supabase"
+import { Client } from "@/types"
+import { Users, Briefcase, DollarSign, PlusCircle, LucideIcon } from "lucide-react"
+import React from "react";
 
-// --- COMPONENTES ---
-
-function ClientStatCard({ title, value, description, icon: Icon, valueColor }: { title: string; value: string; description: string; icon: React.ElementType; valueColor?: string; }) {
-    return (
-        <div className="bg-white border p-5 rounded-xl">
-            <div className="flex justify-between items-start">
-                <p className="text-muted-foreground font-semibold">{title}</p>
-                <Icon className="w-5 h-5 text-muted-foreground" />
-            </div>
-            <p className={`text-3xl font-bold mt-2 ${valueColor ?? 'text-foreground'}`}>{value}</p>
-            <p className="text-xs text-muted-foreground mt-1">{description}</p>
-        </div>
-    );
+// 1. Definição da interface de Props para o Card
+interface ClientStatCardProps {
+  title: string;
+  value: string;
+  description: React.ReactNode; // 2. Alterado de string para React.ReactNode
+  icon: LucideIcon;
+  valueColor: string;
 }
 
-// --- PÁGINA PRINCIPAL ---
-export default function ClientsPage() {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const supabase = createSupabaseBrowserClient();
+// 3. Aplicando os tipos ao componente
+const ClientStatCard = ({ title, value, description, icon: Icon, valueColor }: ClientStatCardProps) => (
+  <div className="bg-white p-6 rounded-lg shadow-sm flex items-start justify-between">
+    <div>
+      <p className="text-sm font-medium text-gray-500">{title}</p>
+      <p className={`text-2xl font-bold ${valueColor}`}>{value}</p>
+      <p className="text-xs text-gray-500 mt-1">{description}</p>
+    </div>
+    <div className="bg-gray-100 p-3 rounded-lg">
+      <Icon className="h-6 w-6 text-gray-600" />
+    </div>
+  </div>
+);
 
-  const fetchClients = useCallback(async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-        .from('clientes')
-        .select('*')
-        .order('created_at', { ascending: false });
+export default async function ClientsPage() {
+  const supabase = createClient();
+  const { data: clientsData, error } = await supabase.from("clients").select(`
+    id,
+    nome,
+    empresa,
+    email_contato,
+    telefone,
+    origem,
+    tipo,
+    projetos:projects(count),
+    valor_total:projects(valor)
+  `);
 
-    if (error) {
-        setError(`Erro ao carregar clientes: ${error.message}`);
-        console.error(error);
-    } else {
-        setClients(data as Client[]);
-    }
-    setLoading(false);
-  }, [supabase]);
+  const clients: Client[] = clientsData?.map(client => ({
+    ...client,
+    projetos: client.projetos[0]?.count || 0,
+    valor_total: client.valor_total.reduce((acc, p) => acc + p.valor, 0) || 0,
+  })) || [];
 
-  useEffect(() => {
-    fetchClients();
-  }, [fetchClients]);
-  
-  const handleDeleteClient = async (id: string) => {
-    if (window.confirm("Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.")) {
-        const { error } = await supabase
-            .from('clientes')
-            .delete()
-            .eq('id', id);
+  if (error && !clientsData) {
+    console.error("Error fetching clients:", error);
+    // Handle error appropriately
+    return <div>Error loading clients.</div>;
+  }
 
-        if (error) {
-            alert(`Erro ao excluir cliente: ${error.message}`);
-        } else {
-            // Atualiza a lista de clientes após a exclusão
-            setClients(clients.filter(client => client.id !== id));
-        }
-    }
-  };
-
-  if (error) {
-    return <div className="p-5 text-center text-destructive bg-destructive/10 rounded-lg">{error}</div>;
+  const handleDeleteClient = async (clientId: string) => {
+    'use server'
+    console.log('delete client', clientId)
+    // Lógica para deletar o cliente
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-8">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold">Clientes</h1>
+          <p className="text-gray-500">Gerencie seus clientes e veja o desempenho.</p>
+        </div>
+        <Link href="/dashboard/clients/new">
+          <Button>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Adicionar Cliente
+          </Button>
+        </Link>
+      </div>
+
       {/* Cards de Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ClientStatCard title="Total de Clientes" value={String(clients.length)} description={<span className="text-gray-500">+2 novos este mês</span>} icon={Users} valueColor="text-green-600" />
@@ -82,29 +84,14 @@ export default function ClientsPage() {
         <ClientStatCard title="Valor Total" value="R$ 27.000"  description={<span className="text-gray-500">Em projetos ativos</span>} icon={DollarSign} valueColor="text-green-600" />
       </div>
 
-      <div className="rounded-xl ">
-        <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">Clientes</h2>
-            <Button asChild>
-              <Link href="/dashboard/clients/new" className="bg-violet-600 text-white">
-                <Plus className="w-4 h-4 mr-2 " /> Novo Cliente
-              </Link>
-            </Button>
-        </div>
-
-        {/* Lista de Clientes com DataTable */}
-        <div>
-            {loading ? (
-                 <p className="p-5 text-center text-muted-foreground">Carregando clientes...</p>
-            ) : (
-                <DataTable 
-                  columns={columns} 
-                  data={clients} 
-                  // Passamos a função de exclusão para a tabela
-                  deleteClient={handleDeleteClient} 
-                />
-            )}
-        </div>
+      <div className="mt-8">
+        <DataTable
+          columns={columns}
+          data={clients}
+          meta={{
+            deleteClient: handleDeleteClient,
+          }}
+        />
       </div>
     </div>
   );
