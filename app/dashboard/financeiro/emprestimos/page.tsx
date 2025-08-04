@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
-import { Plus, DollarSign, TrendingUp, TrendingDown, Calendar, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 // --- TIPOS ---
 type Emprestimo = {
@@ -22,7 +22,7 @@ type Categoria = { id: string; nome: string; };
 type EmprestimoDetalhado = Emprestimo & {
     total_pago: number;
     parcelas_pagas: number;
-    proxima_parcela_valor: number | null;
+    valor_parcela: number | null;
     proxima_parcela_vencimento: string | null;
 };
 
@@ -82,8 +82,8 @@ function LoanListItem({ loan, onDelete }: { loan: EmprestimoDetalhado, onDelete:
                     <p className="font-semibold">{formatCurrency(loan.total_pago)}</p>
                 </div>
                 <div>
-                    <p className="text-xs text-gray-text">Próxima Parcela</p>
-                    <p className="font-semibold">{formatCurrency(loan.proxima_parcela_valor)}</p>
+                    <p className="text-xs text-gray-text">Valor da Parcela</p>
+                    <p className="font-semibold">{formatCurrency(loan.valor_parcela)}</p>
                     <p className="text-xs text-gray-text">
                         Venc: {loan.proxima_parcela_vencimento ? new Date(loan.proxima_parcela_vencimento).toLocaleDateString() : 'Quitado'}
                     </p>
@@ -107,7 +107,6 @@ function LoanModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () =
     const [tipo_emprestimo, setTipoEmprestimo] = useState('');
     const [instituicao, setInstituicao] = useState('');
     const [numero_parcelas, setNumeroParcelas] = useState<number | ''>('');
-    // AJUSTE: Renomeando campos para maior clareza
     const [proximo_vencimento, setProximoVencimento] = useState('');
     const [proxima_parcela_numero, setProximaParcelaNumero] = useState<number | ''>(1);
     
@@ -157,7 +156,6 @@ function LoanModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () =
                 valor_original: valor_total_calculado,
                 taxa_juros: null,
                 numero_parcelas: Number(numero_parcelas),
-                // AJUSTE: Usando o próximo vencimento para calcular a data de contratação "retroativamente"
                 data_contratacao: (() => {
                     const dataVenc = new Date(proximo_vencimento);
                     dataVenc.setMonth(dataVenc.getMonth() - Number(proxima_parcela_numero));
@@ -173,7 +171,6 @@ function LoanModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () =
             return;
         }
 
-        // AJUSTE: Lógica de geração de parcelas corrigida
         const parcelasParaInserir = [];
         const numeroProximaParcela = Number(proxima_parcela_numero) || 1;
         for (let i = 1; i <= Number(numero_parcelas); i++) {
@@ -283,16 +280,31 @@ export default function LoansPage() {
 
         const detailedLoans = await Promise.all(
             emprestimosData.map(async (emprestimo) => {
-                const { data: parcelasData, error: parcelasError } = await supabase
+                const { data: parcelasPagasData } = await supabase
                     .from('parcelas_emprestimo')
                     .select('valor_parcela')
                     .eq('emprestimo_id', emprestimo.id)
                     .eq('status', 'Paga');
 
-                const total_pago = parcelasData?.reduce((sum, p) => sum + p.valor_parcela, 0) || 0;
-                const parcelas_pagas = parcelasData?.length || 0;
+                const { data: proximaParcelaData } = await supabase
+                    .from('parcelas_emprestimo')
+                    .select('valor_parcela, data_vencimento')
+                    .eq('emprestimo_id', emprestimo.id)
+                    .eq('status', 'Pendente')
+                    .order('data_vencimento', { ascending: true })
+                    .limit(1)
+                    .single();
 
-                return { ...emprestimo, total_pago, parcelas_pagas };
+                const total_pago = parcelasPagasData?.reduce((sum, p) => sum + p.valor_parcela, 0) || 0;
+                const parcelas_pagas = parcelasPagasData?.length || 0;
+
+                return { 
+                    ...emprestimo, 
+                    total_pago, 
+                    parcelas_pagas,
+                    valor_parcela: proximaParcelaData?.valor_parcela || 0,
+                    proxima_parcela_vencimento: proximaParcelaData?.data_vencimento || null,
+                };
             })
         );
 
@@ -333,8 +345,8 @@ export default function LoansPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard title="Total Emprestado" value={formatCurrency(totalEmprestado)} />
-                <StatCard title="Total Pago" value={formatCurrency(totalPago)} colorClass="text-success-text" />
-                <StatCard title="Saldo Devedor" value={formatCurrency(saldoDevedor)} colorClass="text-danger-text" />
+                <StatCard title="Total Pago" value={formatCurrency(totalPago)} colorClass="text-green-500" />
+                <StatCard title="Saldo Devedor" value={formatCurrency(saldoDevedor)} colorClass="text-red-500" />
                 <StatCard title="Contratos Ativos" value={String(loans.length)} />
             </div>
 
@@ -343,10 +355,10 @@ export default function LoansPage() {
                 {loading ? (
                     <p>A carregar empréstimos...</p>
                 ) : (
-                    <div className="space-y-6 bg-white rounded-lg">
+                    <div className="space-y-6">
                         {loans.length > 0 ? loans.map(loan => (
                             <LoanListItem key={loan.id} loan={loan} onDelete={handleDeleteLoan} />
-                        )) : <p className="text-gray-text">Nenhum empréstimo cadastrado.</p>}
+                        )) : <div className="bg-white p-6 rounded-lg text-center text-gray-500">Nenhum empréstimo cadastrado.</div>}
                     </div>
                 )}
             </div>
