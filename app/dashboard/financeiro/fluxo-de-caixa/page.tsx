@@ -116,7 +116,7 @@ function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClos
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
             <div className="bg-white dark:bg-dark-secondary p-8 rounded-xl shadow-lg w-full max-w-lg">
-                <h2 className="text-xl font-bold mb-1">Adicionar Transação</h2>
+                <h2 className="bg-green-500 text-xl font-bold mb-1">Adicionar Transação</h2>
                 <p className="text-sm text-gray-text mb-6">Registe uma nova receita ou despesa.</p>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
