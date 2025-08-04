@@ -245,7 +245,7 @@ function ProjectForm({ boardId, project, statuses, onSave, onCancel }: { boardId
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-text mb-1">Forma de Pagamento</label>
-                                <select value={forma_pagamento} onChange={(e) => setFormaPagamento(e.target.value)} className="w-full p-2 bg-gray-50 border rounded-lg">
+                                <select value={forma_pagamento} onChange={(e) => setFormaPagamento(e.target.value as 'À Vista' | '50/50' | 'Parcelado')} className="w-full p-2 bg-gray-50 border rounded-lg">
                                     <option>À Vista</option>
                                     <option>50/50</option>
                                     <option>Parcelado</option>
@@ -300,7 +300,7 @@ function TaskGroupComponent({ group, onUpdate }: { group: TaskGroup; onUpdate: (
         
         await supabase.from('subtarefas').insert({
             group_id: group.id,
-            projeto_id: group.projeto_id, // CORREÇÃO: Adiciona o projeto_id
+            projeto_id: group.projeto_id,
             nome: newItemText,
         });
         setNewItemText('');
@@ -517,12 +517,36 @@ function ProjectDetailView({ project, onUpdate }: { project: Project & { task_gr
 
 
 function StatusManagerModal({ isOpen, onClose, onSave, statusToEdit, boardId }: { isOpen: boolean; onClose: () => void; onSave: () => void; statusToEdit: ProjectStatus | null; boardId: string; }) {
-    // ... (código sem alterações)
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+                <h2 className="font-bold mb-4">{statusToEdit ? 'Editar Fase' : 'Nova Fase'}</h2>
+                <p>Modal de gerenciamento de fases (implemente aqui).</p>
+                <div className="flex gap-2 mt-4">
+                    <button onClick={onClose} className="bg-gray-200 px-4 py-2 rounded">Fechar</button>
+                    <button onClick={onSave} className="bg-blue-500 text-white px-4 py-2 rounded">Salvar</button>
+                </div>
+            </div>
+        </div>
+    );
 }
 
 
 function MoveProjectModal({ isOpen, onClose, onMove, currentBoardId, projectToMove }: { isOpen: boolean; onClose: () => void; onMove: (newBoardId: string) => void; currentBoardId: string; projectToMove: Project | null; }) {
-    // ... (código sem alterações)
+    if (!isOpen || !projectToMove) return null;
+    return (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+                <h2 className="font-bold mb-4">Mover Projeto</h2>
+                <p>Selecione o quadro de destino (implemente aqui).</p>
+                <div className="flex gap-2 mt-4">
+                    <button onClick={onClose} className="bg-gray-200 px-4 py-2 rounded">Cancelar</button>
+                    <button onClick={() => onMove('novo-board-id')} className="bg-blue-500 text-white px-4 py-2 rounded">Mover</button>
+                </div>
+            </div>
+        </div>
+    );
 }
 
 // --- PÁGINA PRINCIPAL ---
@@ -798,7 +822,7 @@ export default function BoardPage() {
                     'Detalhes do Projeto'
                 }
             >
-                {(viewMode === 'new' || viewMode === 'edit') && <ProjectForm boardId={boardId} project={selectedProject} statuses={statuses} onSave={fetchData} onCancel={handleClosePanel} />}
+                {(viewMode === 'new' || viewMode === 'edit') && <ProjectForm boardId={boardId} project={selectedProject || null} statuses={statuses} onSave={fetchData} onCancel={handleClosePanel} />}
                 {viewMode === 'details' && selectedProject && <ProjectDetailView project={selectedProject as Project & { task_groups: TaskGroup[] }} onUpdate={fetchData} />}
             </SlideOverPanel>
             <StatusManagerModal 
