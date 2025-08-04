@@ -16,7 +16,7 @@ type Categoria = { id: string; nome: string; tipo: string; };
 function StatCard({ title, value, isPositive }: { title: string; value: string; isPositive?: boolean; }) {
     const colorClass = isPositive === true ? 'text-success-text' : isPositive === false ? 'text-danger-text' : 'text-dark-text dark:text-light-text';
     return (
-        <div className="bg-white dark:bg-dark-secondary p-5 rounded-xl shadow-sm bg-white">
+        <div className="bg-white dark:bg-dark-secondary p-5 rounded-xl shadow-sm">
             <p className="text-gray-text text-sm">{title}</p>
             <p className={`text-2xl font-bold mt-1 ${colorClass}`}>{value}</p>
         </div>
@@ -116,7 +116,7 @@ function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClos
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
             <div className="bg-white dark:bg-dark-secondary p-8 rounded-xl shadow-lg w-full max-w-lg">
-                <h2 className="bg-green-500 text-xl font-bold mb-1">Adicionar Transação</h2>
+                <h2 className="text-xl font-bold mb-1">Adicionar Transação</h2>
                 <p className="text-sm text-gray-text mb-6">Registe uma nova receita ou despesa.</p>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -166,7 +166,10 @@ function TransactionModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClos
                             </div>
                         )}
                     </div>
-                    <div className="flex justify-end gap-4 pt-4"><button type="button" onClick={onClose} className="bg-gray-200 dark:bg-dark-tertiary font-semibold py-2 px-6 rounded-lg">Cancelar</button><button type="submit" className="bg-brand-blue text-white font-semibold py-2 px-6 rounded-lg">Adicionar Transação</button></div>
+                    <div className="flex justify-end gap-4 pt-4">
+                        <button type="button" onClick={onClose} className="bg-gray-200 dark:bg-dark-tertiary font-semibold py-2 px-6 rounded-lg">Cancelar</button>
+                        <button type="submit" className="bg-green-500 text-white font-semibold py-2 px-6 rounded-lg">Adicionar Transação</button>
+                    </div>
                 </form>
             </div>
         </div>
