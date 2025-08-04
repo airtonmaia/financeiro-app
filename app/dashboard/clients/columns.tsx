@@ -1,7 +1,14 @@
 "use client"
 
-import { ColumnDef } from "@tanstack/react-table"
+import { ColumnDef, RowData } from "@tanstack/react-table"
 import Link from "next/link"
+
+// Adicione esta declaração para informar ao TypeScript sobre a sua função `deleteClient`
+declare module '@tanstack/react-table' {
+  interface TableMeta<TData extends RowData> {
+    deleteClient: (clientId: string) => void
+  }
+}
 
 export type Client = {
   id: string;
@@ -69,8 +76,6 @@ export const columns: ColumnDef<Client>[] = [
   {
     id: "acoes",
     header: "Ações",
-    // A correção foi feita aqui:
-    // A função 'cell' agora recebe '{ row, table }' para ter acesso à instância da tabela.
     cell: ({ row, table }) => (
       <div className="flex gap-2 text-sm">
         <Link href={`/dashboard/clients/${row.original.id}/edit`} className="hover:underline">ver</Link>
@@ -79,7 +84,6 @@ export const columns: ColumnDef<Client>[] = [
         <span>|</span>
         <button
           className="text-destructive hover:underline"
-          // Agora usamos 'table' diretamente, que foi recebido nos parâmetros da célula.
           onClick={() => table.options.meta?.deleteClient(row.original.id)}
         >
           excluir
