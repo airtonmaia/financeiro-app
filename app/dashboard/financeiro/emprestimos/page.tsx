@@ -266,6 +266,7 @@ export default function LoansPage() {
     const [loans, setLoans] = useState<EmprestimoDetalhado[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [parcelasMensais, setParcelasMensais] = useState<number>(0);
     const supabase = createSupabaseBrowserClient();
 
     const fetchLoans = useCallback(async () => {
@@ -308,6 +309,22 @@ export default function LoansPage() {
             })
         );
 
+        // Calcula o total das parcelas do mês corrente
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+
+        const { data: monthlyData } = await supabase
+            .from('parcelas_emprestimo')
+            .select('valor_parcela')
+            .eq('status', 'Pendente')
+            .gte('data_vencimento', firstDay)
+            .lte('data_vencimento', lastDay);
+        
+        const totalMensal = monthlyData?.reduce((sum, p) => sum + p.valor_parcela, 0) || 0;
+        setParcelasMensais(totalMensal);
+
+
         setLoans(detailedLoans as EmprestimoDetalhado[]);
         setLoading(false);
     }, [supabase]);
@@ -343,10 +360,11 @@ export default function LoansPage() {
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 <StatCard title="Total Emprestado" value={formatCurrency(totalEmprestado)} />
                 <StatCard title="Total Pago" value={formatCurrency(totalPago)} colorClass="text-green-500" />
                 <StatCard title="Saldo Devedor" value={formatCurrency(saldoDevedor)} colorClass="text-red-500" />
+                <StatCard title="Parcelas Mensais" value={formatCurrency(parcelasMensais)} colorClass="text-orange-500" />
                 <StatCard title="Contratos Ativos" value={String(loans.length)} />
             </div>
 

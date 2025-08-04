@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Wallet, Users, FileText, DollarSign, ChevronDown, Landmark,
-  ArrowRightLeft, HandCoins, Building2, Repeat, Settings, LogOut, Palette, BarChart3
+  ArrowRightLeft, HandCoins, Building2, Repeat, Settings, LogOut, Palette, BarChart3, User
 } from 'lucide-react';
 
 // --- TIPOS E DADOS ---
@@ -27,7 +27,6 @@ const navItems: NavItem[] = [
       icon: DollarSign, 
       text: 'Financeiro',
       subItems: [
-          // NOVO: Link para a Visão Geral
           { href: '/dashboard/financeiro/visao-geral', text: 'Visão Geral', icon: BarChart3 },
           { href: '/dashboard/financeiro/bancos', text: 'Bancos', icon: Landmark },
           { href: '/dashboard/financeiro/fluxo-de-caixa', text: 'Fluxo de Caixa', icon: ArrowRightLeft },
@@ -47,11 +46,11 @@ function NavLink({ href, icon: Icon, text, active }: { href: string; icon: React
       href={href}
       className={`flex items-center gap-0 m-0 text-sm text-gray-800 p-3 rounded-lg transition-colors hover:bg-violet-600 hover:text-white duration-200 ${
         active
-          ? 'bg-violet-600/10 text-brand-green font-semibold'
-          : 'text-gray-text hover:bg-gray-100 hover:text-dark-text dark:hover:bg-dark-tertiary dark:hover:text-white'
+          ? 'bg-violet-600/10 text-violet-700 font-semibold'
+          : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:hover:bg-dark-tertiary dark:hover:text-white'
       }`}
     >
-      <Icon className="w-5 h-5 text-gray-400" />
+      <Icon className="w-5 h-5" />
       <span className="ml-4 hidden lg:block">{text}</span>
     </Link>
   );
@@ -61,12 +60,12 @@ function NavGroup({ icon: Icon, text, subItems, activeSubItem }: { icon: React.E
     const [isOpen, setIsOpen] = useState(activeSubItem);
 
     return (
-        <div className="">
+        <div>
             <button 
                 onClick={() => setIsOpen(!isOpen)}
                 className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors duration-200 ${
-                    activeSubItem ? 'text-brand-green font-semibold' : 'text-gray-text'
-                } hover:bg-gray-100 hover:text-dark-text dark:hover:bg-dark-tertiary dark:hover:text-white`}
+                    activeSubItem ? 'text-violet-700 font-semibold' : 'text-gray-500'
+                } hover:bg-gray-100 hover:text-gray-800 dark:hover:bg-dark-tertiary dark:hover:text-white`}
             >
                 <div className="flex items-center">
                     <Icon className="w-5 h-5" />
@@ -75,7 +74,7 @@ function NavGroup({ icon: Icon, text, subItems, activeSubItem }: { icon: React.E
                 <ChevronDown className={`w-4 h-4 transition-transform hidden lg:block ${isOpen ? 'rotate-180' : ''}`} />
             </button>
             {isOpen && (
-                <div className="mt-2 pl-4 text-sm text-gray-400">
+                <div className="mt-2 pl-4 space-y-1">
                     {subItems.map(item => (
                         <NavLink 
                             key={item.text}
@@ -99,8 +98,7 @@ export default function Sidebar() {
             <div>
                 <div className="p-3 mb-10">
                     <Link href="/dashboard" className="flex items-center justify-center lg:justify-start">
-                        {/* <div className="w-10 h-10 bg-brand-50 dark:bg-light-primary rounded-full">Pro</div> */}
-                        <span className="ml-1 text-xl font-bold hidden lg:block text-brand-primary dark:text-light-text">Agência 360</span>
+                        <span className="ml-1 text-xl font-bold hidden lg:block text-violet-700 dark:text-light-text">Agência 360</span>
                     </Link>
                 </div>
                 <nav className="flex flex-col space-y-2 text-sm ">
@@ -111,7 +109,7 @@ export default function Sidebar() {
                                 icon={item.icon}
                                 text={item.text}
                                 subItems={item.subItems}
-                                activeSubItem={item.subItems.some(sub => sub.href === pathname)}
+                                activeSubItem={item.subItems.some(sub => pathname.startsWith(sub.href))}
                             />
                         ) : (
                             <NavLink 
@@ -130,6 +128,7 @@ export default function Sidebar() {
                     icon={Settings}
                     text="Configurações"
                     subItems={[
+                        { href: '/dashboard/settings/profile', text: 'Perfil', icon: User },
                         { href: '/dashboard/settings/customization', text: 'Personalização', icon: Palette }
                     ]}
                     activeSubItem={pathname.startsWith('/dashboard/settings')}
