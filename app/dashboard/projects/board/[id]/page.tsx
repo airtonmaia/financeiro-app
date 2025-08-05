@@ -11,7 +11,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import SlideOverPanel from '@/components/ui/SlideOverPanel';
 import { 
     Plus, List, LayoutGrid, Palette, GripVertical, MoreHorizontal, Clock, 
-    CheckCircle2, Edit, Trash2, Eye, Move, CheckSquare, Square, Check, 
+    CheckCircle2, Edit, Trash2, Eye, Move, Check, 
     Paperclip, StickyNote, History, ListTodo
 } from 'lucide-react';
 import { 
@@ -108,7 +108,7 @@ function QuickClientModal({ isOpen, onClose, onClientCreated }: { isOpen: boolea
             .select()
             .single();
 
-        if (data) {
+        if (data && typeof data === 'object') {
             onClientCreated(data as Client);
         }
         setLoading(false);
@@ -216,7 +216,7 @@ function ProjectForm({ boardId, project, statuses, onSave, onCancel }: { boardId
             const { data, error } = await supabase.from('projetos').insert({ ...projectData, user_id: user.id, quadro_id: boardId }).select().single();
             if(error) {
                 errorOccurred = true;
-            } else if (data) {
+            } else if (data && typeof data === 'object') {
                 projectId = data.id;
             }
         }
@@ -685,7 +685,66 @@ function StatusManagerModal({ isOpen, onClose, onSave, statusToEdit, boardId }: 
 
 
 function MoveProjectModal({ isOpen, onClose, onMove, currentBoardId, projectToMove }: { isOpen: boolean; onClose: () => void; onMove: (newBoardId: string) => void; currentBoardId: string; projectToMove: Project | null; }) {
-    // ... (código sem alterações)
+    const supabase = createSupabaseBrowserClient();
+    const [boards, setBoards] = useState<Quadro[]>([]);
+    const [selectedBoard, setSelectedBoard] = useState('');
+
+    useEffect(() => {
+        if (isOpen) {
+            const fetchBoards = async () => {
+                const { data, error } = await supabase.from('quadros').select('id, nome').neq('id', currentBoardId);
+                if (error) {
+                    console.error('Erro ao buscar quadros:', error);
+                    setBoards([]);
+                    setSelectedBoard('');
+                    return;
+                }
+                if (Array.isArray(data) && data.every(b => b && b.id && b.nome)) {
+                    setBoards(data as Quadro[]);
+                    if (data.length > 0 && data[0].id) {
+                        setSelectedBoard(data[0].id);
+                    } else {
+                        setSelectedBoard('');
+                    }
+                } else {
+                    setBoards([]);
+                    setSelectedBoard('');
+                    console.warn('Dados inesperados recebidos:', data);
+                }
+            };
+            fetchBoards();
+        }
+    }, [isOpen, supabase, currentBoardId]);
+    
+    if (!isOpen || !projectToMove) return null;
+    const handleMove = () => {
+        if (selectedBoard) {
+            onMove(selectedBoard);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-dark-secondary p-8 rounded-xl shadow-lg w-full max-w-md">
+                <h2 className="text-xl font-bold mb-4">Mover Projeto</h2>
+                <p className="text-sm text-gray-text mb-6">Selecione o quadro de destino para "{projectToMove.descricao}".</p>
+                <div>
+                    <label className="block text-sm font-medium text-gray-text mb-1">Mover para o quadro</label>
+                    <select value={selectedBoard || ''} onChange={(e) => setSelectedBoard(e.target.value)} className="w-full p-2 bg-gray-50 border rounded-lg">
+                        {(boards && Array.isArray(boards) ? boards : []).map(board => (
+                            board && board.id && board.nome ? (
+                                <option key={board.id} value={board.id}>{board.nome}</option>
+                            ) : null
+                        ))}
+                    </select>
+                </div>
+                <div className="flex justify-end gap-4 pt-6">
+                    <button type="button" onClick={onClose} className="bg-gray-200 dark:bg-dark-tertiary font-semibold py-2 px-6 rounded-lg">Cancelar</button>
+                    <button onClick={handleMove} className="bg-violet-700 text-white font-semibold py-2 px-6 rounded-lg" disabled={!selectedBoard}>Mover</button>
+                </div>
+            </div>
+        </div>
+    );
 }
 
 // --- PÁGINA PRINCIPAL ---
