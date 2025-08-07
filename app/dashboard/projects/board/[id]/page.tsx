@@ -12,7 +12,8 @@ import SlideOverPanel from '@/components/ui/SlideOverPanel';
 import { 
     Plus, List, LayoutGrid, Palette, GripVertical, MoreHorizontal, Clock, 
     CheckCircle2, Edit, Trash2, Eye, Move, Check, 
-    Paperclip, StickyNote, History, ListTodo
+    Paperclip, StickyNote, History, ListTodo, FolderKanban, Columns3, Calendar, DollarSign, CircleUserRound, 
+    icons
 } from 'lucide-react';
 import { 
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger 
@@ -418,8 +419,9 @@ function TaskGroupComponent({ group, onUpdate }: { group: TaskGroup; onUpdate: (
         : 0;
 
     return (
-        <div className="space-y-2">
-            <div className="flex justify-between items-center">
+        <div className="space-y-2 border p-4 rounded-lg">
+            <div className="flex justify-between items-center border-b border-gray-200  pb-4 mb-5 dark:border-dark-tertiary">
+              
                 {isEditingTitle ? (
                     <input 
                         type="text"
@@ -431,10 +433,14 @@ function TaskGroupComponent({ group, onUpdate }: { group: TaskGroup; onUpdate: (
                         autoFocus
                     />
                 ) : (
-                    <h4 onClick={() => setIsEditingTitle(true)} className="font-semibold text-md cursor-pointer">{group.nome}</h4>
+                    <h4 onClick={() => setIsEditingTitle(true)} className="font-semibold text-md cursor-pointer">{group.nome}
+                    </h4>
+                      
                 )}
                 <button onClick={handleDeleteGroup} className="text-gray-400 hover:text-red-500 text-sm">Excluir</button>
+                
             </div>
+            
             <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-500">{Math.round(progress)}%</span>
                 <div className="w-full bg-gray-200 rounded-full h-1.5">
@@ -451,9 +457,9 @@ function TaskGroupComponent({ group, onUpdate }: { group: TaskGroup; onUpdate: (
                                 onChange={() => handleToggleSubtask(task.id, task.concluida)}
                                 className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
                             />
-                            <span className={`text-sm ${task.concluida ? 'line-through text-gray-500' : ''}`}>{task.nome}</span>
+                            <span className={`text-sm text-gray-700 ${task.concluida ? 'line-through text-gray-500' : ''}`}>{task.nome}</span>
                         </div>
-                        <button onClick={() => handleDeleteSubtask(task.id)} className="text-gray-400 hover:text-red-500 opacity-50 hover:opacity-100">
+                        <button onClick={() => handleDeleteSubtask(task.id)} className="text-gray-400 hover:text-violet-500 opacity-50 hover:opacity-100">
                             <Trash2 className="w-3 h-3" />
                         </button>
                     </div>
@@ -530,48 +536,64 @@ function ProjectDetailView({ project, onUpdate }: { project: Project & { task_gr
         : 0;
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="px-2 space-y-6">
             {/* Visão Geral */}
             <div>
-                <h3 className="font-bold text-lg mb-2">Visão Geral</h3>
-                <div className="space-y-4">
-                    <div>
-                        <label className="text-sm font-medium text-gray-500">Progresso</label>
+
+                  <div>
+                        <label className="text-xs font-normal text-gray-700">Progresso</label>
                         <div className="flex items-center gap-2 mt-1">
-                            <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                <div className="bg-violet-600 h-2.5 rounded-full" style={{ width: `${progress}%` }}></div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div className="bg-violet-600 h-2 rounded-full" style={{ width: `${progress}%` }}></div>
                             </div>
                             <span className="text-sm font-semibold">{Math.round(progress)}%</span>
                         </div>
                     </div>
-                    <div>
-                        <label className="text-sm font-medium text-gray-500">Descrição</label>
-                        <p className="text-sm text-gray-700 mt-1">{project.observacao || 'Nenhuma descrição fornecida.'}</p>
-                    </div>
+                <hr className="my-6 border-gray-200 dark:border-dark-tertiary" />
+                
+               
+                <div className="space-y-4">
+                  
+                    
                     <table className="w-full text-sm">
                         <tbody>
-                            <tr className="border-b">
-                                <td className="py-2 font-medium text-gray-500">Tipo de Projeto</td>
+                            <tr>
+                                <td className="py-2 font-medium text-gray-900 inline-flex intems-center">
+                                   <FolderKanban className="h-5 mr-2 text-violet-600" />
+                                    Tipo de Projeto
+                                    </td>
                                 <td className="py-2 text-gray-800">{project.tipo_projeto}</td>
                             </tr>
-                            <tr className="border-b">
-                                <td className="py-2 font-medium text-gray-500">Status</td>
+                            <tr className="">
+                                <td className="py-2 font-medium text-gray-900 inline-flex intems-center">
+                                    <Columns3 className="h-5 mr-2 text-violet-600" />
+                                    Status</td>
                                 <td className="py-2 text-gray-800">{project.status_entrega}</td>
                             </tr>
-                            <tr className="border-b">
-                                <td className="py-2 font-medium text-gray-500">Previsão de Entrega</td>
+                            <tr className="">
+                                <td className="py-2 font-medium text-gray-900 inline-flex intems-center">
+                                    <Calendar className="h-5 mr-2 text-violet-600" />
+                                    Previsão de Entrega</td>
                                 <td className="py-2 text-gray-800">{project.data_entrega ? new Date(project.data_entrega).toLocaleDateString() : 'N/A'}</td>
                             </tr>
-                            <tr className="border-b">
-                                <td className="py-2 font-medium text-gray-500">Valor do Projeto</td>
+                            <tr className="">
+                                <td className="py-2 font-medium text-gray-900 inline-flex intems-center">
+                                    <DollarSign className="h-5 mr-2 text-violet-600" />
+                                    Valor do Projeto</td>
                                 <td className="py-2 text-gray-800">{project.valor_total ? `R$ ${project.valor_total.toFixed(2)}` : 'N/A'}</td>
                             </tr>
                             <tr>
-                                <td className="py-2 font-medium text-gray-500">Responsáveis</td>
+                                <td className="py-2 font-medium text-gray-900 inline-flex intems-center">
+                                    <CircleUserRound className="h-5 mr-2 text-violet-600" />
+                                    Responsáveis</td>
                                 <td className="py-2 text-gray-800">{project.responsaveis || 'N/A'}</td>
                             </tr>
                         </tbody>
                     </table>
+                    <div className="border bg-violet-50 px-6 py-4 rounded-md">
+                        <label className="text-md font-semibold text-gray-900">Descrição</label>
+                        <p className="text-sm text-gray-600 mt-1">{project.observacao || 'Nenhuma descrição fornecida.'}</p>
+                    </div>
                 </div>
             </div>
 
@@ -1018,18 +1040,33 @@ export default function BoardPage() {
                     </DragDropContext>
                 </div>
             </div>
-            <SlideOverPanel
-                isOpen={!!viewMode}
-                onClose={handleClosePanel}
-                title={
-                    viewMode === 'new' ? 'Novo Projeto' :
-                    viewMode === 'edit' ? 'Editar Projeto' :
-                    'Detalhes do Projeto'
-                }
-            >
-                {(viewMode === 'new' || viewMode === 'edit') && <ProjectForm boardId={boardId} project={selectedProject || null} statuses={statuses} onSave={fetchData} onCancel={handleClosePanel} />}
-                {viewMode === 'details' && selectedProject && <ProjectDetailView project={selectedProject as Project & { task_groups: TaskGroup[] }} onUpdate={fetchData} />}
-            </SlideOverPanel>
+           <SlideOverPanel
+  isOpen={!!viewMode}
+  onClose={handleClosePanel}
+  title={
+    viewMode === 'new'   ? 'Novo Projeto'
+  : viewMode === 'edit'  ? 'Editar Projeto'
+  : /* detalhes */       selectedProject?.descricao ?? ''
+  }
+>
+  {(viewMode === 'new' || viewMode === 'edit') && (
+    <ProjectForm
+      boardId={boardId}
+      project={selectedProject || null}
+      statuses={statuses}
+      onSave={fetchData}
+      onCancel={handleClosePanel}
+    />
+  )}
+
+  {viewMode === 'details' && selectedProject && (
+    <ProjectDetailView
+      project={selectedProject as Project & { task_groups: TaskGroup[] }}
+      onUpdate={fetchData}
+    />
+  )}
+</SlideOverPanel>
+
             <StatusManagerModal 
                 isOpen={isStatusModalOpen} 
                 onClose={() => setIsStatusModalOpen(false)} 
