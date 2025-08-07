@@ -481,8 +481,8 @@ function TaskGroupComponent({ group, onUpdate }: { group: TaskGroup; onUpdate: (
                     </div>
                 </form>
             ) : (
-                <button onClick={() => setIsAdding(true)} className="w-full text-left p-2 text-sm text-gray-500 hover:bg-gray-100 rounded-lg">
-                    Adicionar um item...
+                <button onClick={() => setIsAdding(true)} className="text-left px-2 py-2 text-xs text-violet-700 bg-violet-50 font-semibold ml-9 hover:bg-gray-100 rounded-sm">
+                    Adicionar um item
                 </button>
             )}
         </div>
@@ -519,9 +519,9 @@ function TaskSection({ project, onUpdate }: { project: Project & { task_groups: 
                     value={newGroupName}
                     onChange={(e) => setNewGroupName(e.target.value)}
                     placeholder="Adicionar novo grupo de tarefas..."
-                    className="flex-1 p-2 bg-gray-50 border rounded-lg text-sm"
+                    className="flex-1 p-2 bg-gray-50 border rounded-sm text-sm"
                 />
-                <button type="submit" className="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg text-sm">Adicionar</button>
+                <button type="submit" className="bg-violet-700 text-white font-semibold py-2 px-4 rounded-sm text-sm">Adicionar</button>
             </form>
         </div>
     );
@@ -558,44 +558,45 @@ function ProjectDetailView({ project, onUpdate }: { project: Project & { task_gr
                     <table className="w-full text-sm">
                         <tbody>
                             <tr>
-                                <td className="py-2 font-medium text-gray-900 inline-flex intems-center">
+                                <td className="py-2 font-medium text-gray-900 inline-flex intems-center text-sm">
                                    <FolderKanban className="h-5 mr-2 text-violet-600" />
                                     Tipo de Projeto
                                     </td>
-                                <td className="py-2 text-gray-800">{project.tipo_projeto}</td>
-                            </tr>
-                            <tr className="">
-                                <td className="py-2 font-medium text-gray-900 inline-flex intems-center">
-                                    <Columns3 className="h-5 mr-2 text-violet-600" />
-                                    Status</td>
-                                <td className="py-2 text-gray-800">{project.status_entrega}</td>
-                            </tr>
-                            <tr className="">
-                                <td className="py-2 font-medium text-gray-900 inline-flex intems-center">
-                                    <Calendar className="h-5 mr-2 text-violet-600" />
-                                    Previsão de Entrega</td>
-                                <td className="py-2 text-gray-800">{project.data_entrega ? new Date(project.data_entrega).toLocaleDateString() : 'N/A'}</td>
-                            </tr>
-                            <tr className="">
-                                <td className="py-2 font-medium text-gray-900 inline-flex intems-center">
-                                    <DollarSign className="h-5 mr-2 text-violet-600" />
-                                    Valor do Projeto</td>
-                                <td className="py-2 text-gray-800">{project.valor_total ? `R$ ${project.valor_total.toFixed(2)}` : 'N/A'}</td>
+                                <td className="py-3 text-gray-800">{project.tipo_projeto}</td>
                             </tr>
                             <tr>
-                                <td className="py-2 font-medium text-gray-900 inline-flex intems-center">
+                                <td className="py-3 font-medium text-gray-900 inline-flex intems-center">
+                                    <Columns3 className="h-5 mr-2 text-violet-600" />
+                                    Status</td>
+                                <td className="py-3 text-gray-800">{project.status_entrega}</td>
+                            </tr>
+                            <tr className="">
+                                <td className="py-3 font-medium text-gray-900 inline-flex intems-center">
+                                    <Calendar className="h-5 mr-2 text-violet-600" />
+                                    Previsão de Entrega</td>
+                                <td className="py-3 text-gray-800">{project.data_entrega ? new Date(project.data_entrega).toLocaleDateString() : 'N/A'}</td>
+                            </tr>
+                            <tr className="">
+                                <td className="py-3 font-medium text-gray-900 inline-flex intems-center">
+                                    <DollarSign className="h-5 mr-2 text-violet-600" />
+                                    Valor do Projeto</td>
+                                <td className="py-3 text-gray-800">{project.valor_total ? `R$ ${project.valor_total.toFixed(2)}` : 'N/A'}</td>
+                            </tr>
+                            <tr>
+                                <td className="py-3 font-medium text-gray-900 inline-flex intems-center">
                                     <CircleUserRound className="h-5 mr-2 text-violet-600" />
                                     Responsáveis</td>
                                 <td className="py-2 text-gray-800">{project.responsaveis || 'N/A'}</td>
                             </tr>
                         </tbody>
                     </table>
-                    <div className="border bg-violet-50 px-6 py-4 rounded-md">
+                    <div className="border border-violet-100 bg-violet-50 px-6 py-4 rounded-md">
                         <label className="text-md font-semibold text-gray-900">Descrição</label>
                         <p className="text-sm text-gray-600 mt-1">{project.observacao || 'Nenhuma descrição fornecida.'}</p>
                     </div>
                 </div>
-            </div>
+                    </div> 
+                   {/*  fim da div principal*/}
 
             {/* Abas */}
             <div>
