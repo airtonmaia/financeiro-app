@@ -41,7 +41,7 @@ function ProjectCard({ project, onOpen, onEdit, onMove, onDelete }: { project: P
     };
 
     return (
-        <div className="bg-white dark:bg-dark-secondary rounded-xl shadow-card p-4 space-y-3 cursor-pointer" onClick={onOpen}>
+        <div className="bg-white border hover:border-violet-400 dark:bg-dark-secondary rounded-xl shadow-card p-4 space-y-3 cursor-pointer" onClick={onOpen}>
             <div className="flex justify-between items-start">
                 <div className="flex items-center gap-2 flex-wrap">
                     {project.prioridade && (
@@ -967,12 +967,15 @@ export default function BoardPage() {
                                                 <div {...providedDrag.draggableProps} ref={providedDrag.innerRef} className="w-80 flex-shrink-0">
                                                     <Droppable droppableId={status.name} type="CARD">
                                                         {(providedDrop) => (
+                                                            //coluna do kanban
                                                             <div ref={providedDrop.innerRef} {...providedDrop.droppableProps} className="border border-dashed border-gray-300 dark:bg-dark-tertiary rounded-lg p-3 h-full flex flex-col">
                                                                 <div className="flex justify-between items-center mb-3 px-1">
                                                                     <div {...providedDrag.dragHandleProps} className="flex items-center gap-2 cursor-grab p-1">
                                                                         <GripVertical className="w-4 h-4 text-gray-400" />
                                                                         <span className="w-1.5 h-4 rounded-full" style={{ backgroundColor: status.color }}></span>
                                                                         <h4 className="font-semibold">{status.name} ({projects.filter(p => p.status_entrega === status.name).length})</h4>
+                                                                  <span className="inline-flex items-center rounded-md bg-purple-400/10 px-2 py-1 text-xs font-medium text-purple-400 inset-ring inset-ring-purple-400/30">Badge</span>
+
                                                                         {status.is_final_status && <Check className="w-4 h-4 text-green-500" />}
                                                                     </div>
                                                                     <DropdownMenu>
