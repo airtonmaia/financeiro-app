@@ -13,6 +13,18 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { type Client } from '@/types';
 
+// --- COMPONENTES SHADCN---
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+
 // --- COMPONENTES ---
 
 // CORRIGIDO: A propriedade 'description' agora aceita React.ReactNode
@@ -104,6 +116,24 @@ export default function ClientsPage() {
                 <Plus className="w-4 h-4 mr-2 " /> Novo Cliente
               </Link>
             </Button>
+
+
+
+            <Sheet>
+                <SheetTrigger>
+                    <Button variant="outline">Novo Cliente</Button>
+                    
+                    </SheetTrigger>
+                    <SheetContent>
+                            <SheetHeader>
+                            <SheetTitle>Are you absolutely sure?</SheetTitle>
+                                <SheetDescription>
+                                This action cannot be undone. This will permanently delete your account
+                                and remove your data from our servers.
+                                </SheetDescription>
+                            </SheetHeader>
+                    </SheetContent>
+            </Sheet>
         </div>
 
         {/* Tabela de Clientes com Tailwind CSS */}
