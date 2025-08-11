@@ -19,6 +19,9 @@ import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
 // --- COMPONENTES ---
 
 function ProjectCard({ project, onOpen, onEdit, onMove, onDelete }: { project: Project & { task_groups: TaskGroup[] }; onOpen: () => void; onEdit: () => void; onMove: () => void; onDelete: () => void; }) {
@@ -76,7 +79,10 @@ function ProjectCard({ project, onOpen, onEdit, onMove, onDelete }: { project: P
                 </div>
                 <div className="flex -space-x-2">
                     {/* Placeholder for assignees */}
-                    <div className="w-6 h-6 bg-gray-300 rounded-full border-2 border-white dark:border-dark-secondary flex items-center justify-center text-xs font-bold">AM</div>
+                        <Avatar className="rounded-full size-6">
+                            <AvatarImage  src="/avatar.png" />
+                            <AvatarFallback>AG</AvatarFallback>
+                        </Avatar>
                 </div>
             </div>
         </div>
@@ -940,7 +946,7 @@ export default function BoardPage() {
     const selectedProject = projects.find(p => p.id === currentProjectId);
 
     return (
-        <div className="flex h-[calc(100vh_-_theme(space.24))]">
+        <div className=" flex h-[calc(100vh_-_theme(space.24))]">
             <div className="flex-1 flex flex-col space-y-6 p-6">
                 <div className="flex justify-between items-center">
                     <div>
@@ -968,13 +974,15 @@ export default function BoardPage() {
                                                     <Droppable droppableId={status.name} type="CARD">
                                                         {(providedDrop) => (
                                                             //coluna do kanban
-                                                            <div ref={providedDrop.innerRef} {...providedDrop.droppableProps} className="border border-dashed border-gray-300 dark:bg-dark-tertiary rounded-lg p-3 h-full flex flex-col">
+                                                            <div ref={providedDrop.innerRef} {...providedDrop.droppableProps} className="bg-gray-100 border-gray-300 dark:bg-dark-tertiary rounded-lg p-3 h-full flex flex-col">
                                                                 <div className="flex justify-between items-center mb-3 px-1">
                                                                     <div {...providedDrag.dragHandleProps} className="flex items-center gap-2 cursor-grab p-1">
                                                                         <GripVertical className="w-4 h-4 text-gray-400" />
                                                                         <span className="w-1.5 h-4 rounded-full" style={{ backgroundColor: status.color }}></span>
-                                                                        <h4 className="font-semibold">{status.name} ({projects.filter(p => p.status_entrega === status.name).length})</h4>
-                                                                  <span className="inline-flex items-center rounded-md bg-purple-400/10 px-2 py-1 text-xs font-medium text-purple-400 inset-ring inset-ring-purple-400/30">Badge</span>
+                                                                        <h4 className="font-semibold">{status.name} </h4>
+                                                                
+                                                                
+                                                                          <Badge variant="secondary">{projects.filter(p => p.status_entrega === status.name).length}</Badge>
 
                                                                         {status.is_final_status && <Check className="w-4 h-4 text-green-500" />}
                                                                     </div>
