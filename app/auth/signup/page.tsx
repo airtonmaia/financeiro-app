@@ -3,13 +3,11 @@
 
 'use client';
 import { useState } from 'react';
-// CORREÇÃO: Importa a função para criar o cliente do Supabase
 import { createSupabaseBrowserClient } from '../../../lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function SignupPage() {
-  // CORREÇÃO: Cria a instância do cliente Supabase chamando a função
   const supabase = createSupabaseBrowserClient();
   
   const [email, setEmail] = useState('');
@@ -24,25 +22,24 @@ export default function SignupPage() {
     setMessage('');
 
     try {
+      // A opção de confirmação de e-mail foi removida para simplificar o fluxo de desenvolvimento.
+      // Ao se cadastrar, o usuário agora será logado automaticamente.
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
       });
 
       if (error) {
         throw error;
       }
 
-      setMessage('Cadastro realizado! Verifique seu e-mail para ativar sua conta.');
-      // Não é necessário redirecionar, o usuário deve verificar o e-mail.
+      // Após o cadastro bem-sucedido, a página é atualizada.
+      // O middleware irá interceptar, detetar a sessão do usuário e redirecionar para /dashboard.
+      router.refresh();
 
     } catch (error: any) {
       setMessage(`Erro ao cadastrar: ${error.message}`);
-    } finally {
-      setLoading(false);
+      setLoading(false); // Interrompe o carregamento apenas se houver erro.
     }
   };
 
@@ -84,7 +81,7 @@ export default function SignupPage() {
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:shadow-outline transform transition duration-300 hover:scale-105 disabled:bg-gray-500"
               disabled={loading}
             >
-              {loading ? 'Cadastrando...' : 'Cadastrar'}
+              {loading ? 'Criando conta...' : 'Criar conta e entrar'}
             </button>
             <Link href="/auth/login" className="inline-block align-baseline font-semibold text-sm text-blue-400 hover:text-blue-300 transition duration-200">
               Já tenho conta
@@ -92,7 +89,8 @@ export default function SignupPage() {
           </div>
         </form>
         {message && (
-          <p className={`text-center text-sm mt-4 p-3 rounded-lg ${message.includes('Erro') ? 'bg-red-900 text-red-200' : 'bg-green-900 text-green-200'}`}>
+          // Este bloco agora só exibirá erros, pois o sucesso leva a um redirecionamento.
+          <p className="text-center text-sm mt-4 p-3 rounded-lg bg-red-900 text-red-200">
             {message}
           </p>
         )}
