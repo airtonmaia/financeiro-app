@@ -61,10 +61,16 @@ export default function ClientsPage() {
       console.error(error);
     } else {
       const clientsWithProjectData = data.map(client => {
+        // Garante que client.projetos é um array, mesmo que venha nulo ou indefinido
         const projetos = Array.isArray(client.projetos) ? client.projetos : [];
         const totalProjetos = projetos.length;
+        
         const valorTotal = projetos.reduce(
-          (acc, projeto) => acc + (projeto.valor_total || 0),
+          (acc: number, projeto: { id: string; valor_total: number | null }) => {
+            // Verificação mais robusta para garantir que valor_total é um número
+            const valor = (projeto && typeof projeto.valor_total === 'number') ? projeto.valor_total : 0;
+            return acc + valor;
+          },
           0
         );
         return {

@@ -935,7 +935,7 @@ export default function BoardPage() {
             .update({ is_final_status: true })
             .eq('id', statusId);
         
-        fetchData();
+        fetchData(); 
     };
 
     const handleDeleteStatus = async (statusId: string) => {
