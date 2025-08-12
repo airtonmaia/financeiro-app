@@ -22,6 +22,8 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
+import ProjectListPage from '@/app/dashboard/projects/board/[id]/page-list'; // Importar o componente de lista
+
 // --- COMPONENTES ---
 
 function ProjectCard({ project, onOpen, onEdit, onMove, onDelete }: { project: Project & { task_groups: TaskGroup[] }; onOpen: () => void; onEdit: () => void; onMove: () => void; onDelete: () => void; }) {
@@ -783,7 +785,8 @@ export default function BoardPage() {
     const searchParams = useSearchParams();
     const boardId = params.id as string;
     
-    const viewMode = searchParams.get('view');
+    const viewMode = searchParams.get('view'); // Existing viewMode for slide-over panel
+    const displayMode = searchParams.get('displayMode') || 'kanban'; // New displayMode for kanban/list toggle
     const currentProjectId = searchParams.get('projectId');
 
     const [projects, setProjects] = useState<(Project & { task_groups: TaskGroup[] })[]>([]);
@@ -836,6 +839,12 @@ export default function BoardPage() {
         const params = new URLSearchParams(searchParams.toString());
         params.delete('view');
         params.delete('projectId');
+        router.push(`?${params.toString()}`);
+    };
+
+    const handleViewChange = (mode: 'kanban' | 'list') => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('displayMode', mode);
         router.push(`?${params.toString()}`);
     };
     
@@ -954,103 +963,117 @@ export default function BoardPage() {
                         <p className="text-sm text-gray-text">{boardDescription || 'Visualize e gerencie os projetos deste quadro.'}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                        <button className="p-2 rounded-lg text-gray-text hover:bg-gray-100"><List className="w-5 h-5" /></button>
-                        <button className="p-2 rounded-lg bg-violet-700/20 text-violet-700"><LayoutGrid className="w-5 h-5" /></button>
+                        <button 
+                            className={`p-2 rounded-lg ${displayMode === 'list' ? 'bg-violet-700/20 text-violet-700' : 'text-gray-text hover:bg-gray-100'}`}
+                            onClick={() => handleViewChange('list')}
+                        >
+                            <List className="w-5 h-5" />
+                        </button>
+                        <button 
+                            className={`p-2 rounded-lg ${displayMode === 'kanban' ? 'bg-violet-700/20 text-violet-700' : 'text-gray-text hover:bg-gray-100'}`}
+                            onClick={() => handleViewChange('kanban')}
+                        >
+                            <LayoutGrid className="w-5 h-5" />
+                        </button>
                         <button onClick={() => handleOpenPanel('new')} className="bg-violet-700 hover:bg-violet-700/90 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2">
                             <Plus className="w-4 h-4" /> Novo Projeto
                         </button>
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-x-auto">
-                    <DragDropContext onDragEnd={onDragEnd}>
-                        <Droppable droppableId="board" direction="horizontal" type="COLUMN">
-                            {(provided) => (
-                                <div {...provided.droppableProps} ref={provided.innerRef} className="flex gap-4 h-full items-start">
-                                    {statuses.map((status, index) => (
-                                        <Draggable draggableId={status.id} index={index} key={status.id}>
-                                            {(providedDrag) => (
-                                                <div {...providedDrag.draggableProps} ref={providedDrag.innerRef} className="w-80 flex-shrink-0">
-                                                    <Droppable droppableId={status.name} type="CARD">
-                                                        {(providedDrop) => (
-                                                            //coluna do kanban
-                                                            <div ref={providedDrop.innerRef} {...providedDrop.droppableProps} className="bg-gray-100 border-gray-300 dark:bg-dark-tertiary rounded-lg p-3 h-full flex flex-col">
-                                                                <div className="flex justify-between items-center mb-3 px-1">
-                                                                    <div {...providedDrag.dragHandleProps} className="flex items-center gap-2 cursor-grab p-1">
-                                                                        <GripVertical className="w-4 h-4 text-gray-400" />
-                                                                        <span className="w-1.5 h-4 rounded-full" style={{ backgroundColor: status.color }}></span>
-                                                                        <h4 className="font-semibold">{status.name} </h4>
-                                                                
-                                                                
-                                                                          <Badge variant="secondary">{projects.filter(p => p.status_entrega === status.name).length}</Badge>
+                {displayMode === 'kanban' ? (
+                    <div className="flex-1 overflow-x-auto">
+                        <DragDropContext onDragEnd={onDragEnd}>
+                            <Droppable droppableId="board" direction="horizontal" type="COLUMN">
+                                {(provided) => (
+                                    <div {...provided.droppableProps} ref={provided.innerRef} className="flex gap-4 h-full items-start">
+                                        {statuses.map((status, index) => (
+                                            <Draggable draggableId={status.id} index={index} key={status.id}>
+                                                {(providedDrag) => (
+                                                    <div {...providedDrag.draggableProps} ref={providedDrag.innerRef} className="w-80 flex-shrink-0">
+                                                        <Droppable droppableId={status.name} type="CARD">
+                                                            {(providedDrop) => (
+                                                                //coluna do kanban
+                                                                <div ref={providedDrop.innerRef} {...providedDrop.droppableProps} className="bg-gray-100 border-gray-300 dark:bg-dark-tertiary rounded-lg p-3 h-full flex flex-col">
+                                                                    <div className="flex justify-between items-center mb-3 px-1">
+                                                                        <div {...providedDrag.dragHandleProps} className="flex items-center gap-2 cursor-grab p-1">
+                                                                            <GripVertical className="w-4 h-4 text-gray-400" />
+                                                                            <span className="w-1.5 h-4 rounded-full" style={{ backgroundColor: status.color }}></span>
+                                                                            <h4 className="font-semibold">{status.name} </h4>
+                                                                    
+                                                                    
+                                                                              <Badge variant="secondary">{projects.filter(p => p.status_entrega === status.name).length}</Badge>
 
-                                                                        {status.is_final_status && <Check className="w-4 h-4 text-green-500" />}
+                                                                            {status.is_final_status && <Check className="w-4 h-4 text-green-500" />}
+                                                                        </div>
+                                                                        <DropdownMenu>
+                                                                            <DropdownMenuTrigger asChild>
+                                                                                <button className="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-dark-tertiary">
+                                                                                    <MoreHorizontal className="w-4 h-4 text-gray-text" />
+                                                                                </button>
+                                                                            </DropdownMenuTrigger>
+                                                                            <DropdownMenuContent>
+                                                                                <DropdownMenuItem onClick={() => handleEditStatus(status)}>
+                                                                                    <Edit className="w-4 h-4 mr-2" /> Editar Fase
+                                                                                </DropdownMenuItem>
+                                                                                <DropdownMenuItem onClick={() => handleSetFinalStatus(status.id)} disabled={status.is_final_status}>
+                                                                                    <Check className="w-4 h-4 mr-2" /> Definir como fase final
+                                                                                </DropdownMenuItem>
+                                                                                <DropdownMenuItem onClick={() => handleDeleteStatus(status.id)} className="text-danger-text">
+                                                                                    <Trash2 className="w-4 h-4 mr-2" /> Excluir Fase
+                                                                                </DropdownMenuItem>
+                                                                            </DropdownMenuContent>
+                                                                        </DropdownMenu>
                                                                     </div>
-                                                                    <DropdownMenu>
-                                                                        <DropdownMenuTrigger asChild>
-                                                                            <button className="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-dark-tertiary">
-                                                                                <MoreHorizontal className="w-4 h-4 text-gray-text" />
-                                                                            </button>
-                                                                        </DropdownMenuTrigger>
-                                                                        <DropdownMenuContent>
-                                                                            <DropdownMenuItem onClick={() => handleEditStatus(status)}>
-                                                                                <Edit className="w-4 h-4 mr-2" /> Editar Fase
-                                                                            </DropdownMenuItem>
-                                                                            <DropdownMenuItem onClick={() => handleSetFinalStatus(status.id)} disabled={status.is_final_status}>
-                                                                                <Check className="w-4 h-4 mr-2" /> Definir como fase final
-                                                                            </DropdownMenuItem>
-                                                                            <DropdownMenuItem onClick={() => handleDeleteStatus(status.id)} className="text-danger-text">
-                                                                                <Trash2 className="w-4 h-4 mr-2" /> Excluir Fase
-                                                                            </DropdownMenuItem>
-                                                                        </DropdownMenuContent>
-                                                                    </DropdownMenu>
+                                                                    <div className="space-y-3 flex-1 overflow-y-auto">
+                                                                        {projects.filter(p => p.status_entrega === status.name).map((p, i) => (
+                                                                            <Draggable key={p.id} draggableId={p.id} index={i}>
+                                                                                {(providedCard) => (
+                                                                                    <div
+                                                                                        ref={providedCard.innerRef}
+                                                                                        {...providedCard.draggableProps}
+                                                                                        {...providedCard.dragHandleProps}
+                                                                                    >
+                                                                                        <ProjectCard 
+                                                                                            project={p} 
+                                                                                            onOpen={() => handleOpenPanel('details', p.id)}
+                                                                                            onEdit={() => handleOpenPanel('edit', p.id)}
+                                                                                            onMove={() => handleOpenMoveModal(p)}
+                                                                                            onDelete={() => handleDeleteProject(p.id)}
+                                                                                        />
+                                                                                    </div>
+                                                                                )}
+                                                                            </Draggable>
+                                                                        ))}
+                                                                        {providedDrop.placeholder}
+                                                                    </div>
+                                                                    <button onClick={() => handleOpenPanel('new')} className="mt-3 text-sm text-gray-text hover:text-brand-primary w-full text-left p-2 rounded-md">
+                                                                        + Adicionar um projeto
+                                                                    </button>
                                                                 </div>
-                                                                <div className="space-y-3 flex-1 overflow-y-auto">
-                                                                    {projects.filter(p => p.status_entrega === status.name).map((p, i) => (
-                                                                        <Draggable key={p.id} draggableId={p.id} index={i}>
-                                                                            {(providedCard) => (
-                                                                                <div
-                                                                                    ref={providedCard.innerRef}
-                                                                                    {...providedCard.draggableProps}
-                                                                                    {...providedCard.dragHandleProps}
-                                                                                >
-                                                                                    <ProjectCard 
-                                                                                        project={p} 
-                                                                                        onOpen={() => handleOpenPanel('details', p.id)}
-                                                                                        onEdit={() => handleOpenPanel('edit', p.id)}
-                                                                                        onMove={() => handleOpenMoveModal(p)}
-                                                                                        onDelete={() => handleDeleteProject(p.id)}
-                                                                                    />
-                                                                                </div>
-                                                                            )}
-                                                                        </Draggable>
-                                                                    ))}
-                                                                    {providedDrop.placeholder}
-                                                                </div>
-                                                                <button onClick={() => handleOpenPanel('new')} className="mt-3 text-sm text-gray-text hover:text-brand-primary w-full text-left p-2 rounded-md">
-                                                                    + Adicionar um projeto
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </Droppable>
-                                                </div>
-                                            )}
-                                        </Draggable>
-                                    ))}
-                                    {provided.placeholder}
-                                    <div className="w-80 flex-shrink-0">
-                                        <button 
-                                            onClick={() => { setStatusToEdit(null); setIsStatusModalOpen(true); }}
-                                            className="w-full bg-gray-200/50 dark:bg-dark-tertiary/50 hover:bg-gray-200 dark:hover:bg-dark-tertiary text-gray-500 font-semibold p-3 rounded-lg"
-                                        >
-                                            + Adicionar nova fase
-                                        </button>
+                                                            )}
+                                                        </Droppable>
+                                                    </div>
+                                                )}
+                                            </Draggable>
+                                        ))}
+                                        {provided.placeholder}
+                                        <div className="w-80 flex-shrink-0">
+                                            <button 
+                                                onClick={() => { setStatusToEdit(null); setIsStatusModalOpen(true); }}
+                                                className="w-full bg-gray-200/50 dark:bg-dark-tertiary/50 hover:bg-gray-200 dark:hover:bg-dark-tertiary text-gray-500 font-semibold p-3 rounded-lg"
+                                            >
+                                                + Adicionar nova fase
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                        </Droppable>
-                    </DragDropContext>
-                </div>
+                                )}
+                            </Droppable>
+                        </DragDropContext>
+                    </div>
+                ) : (
+                    <ProjectListPage boardId={boardId} />
+                )}
             </div>
            <SlideOverPanel
   isOpen={!!viewMode}

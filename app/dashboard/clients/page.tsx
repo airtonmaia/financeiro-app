@@ -6,30 +6,23 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
-import { Users, Briefcase, DollarSign, Plus, MoreHorizontal, Edit, Trash2, Eye } from 'lucide-react';
+import { Users, Briefcase, DollarSign, MoreHorizontal, Edit, Trash2, Eye } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { 
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { type Client } from '@/types';
+import { AddClientSheet } from '@/components/AddClientSheet';
 
-// --- COMPONENTES SHADCN---
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
+// --- TIPOS -- -
+// Tipo para o estado do cliente, incluindo dados agregados de projetos
+type ClientWithProjects = Client & {
+  projetos: number;
+  valor_total: number;
+};
 
 // --- COMPONENTES ---
 
-// CORRIGIDO: A propriedade 'description' agora aceita React.ReactNode
 function ClientStatCard({ title, value, description, icon: Icon, valueColor }: { title: string; value: string; description: React.ReactNode; icon: React.ElementType; valueColor?: string; }) {
     return (
         <div className="bg-white border p-5 rounded-xl">
@@ -45,31 +38,42 @@ function ClientStatCard({ title, value, description, icon: Icon, valueColor }: {
 
 // --- PÁGINA PRINCIPAL ---
 export default function ClientsPage() {
-  const [clients, setClients] = useState<Client[]>([]);
+  const [clients, setClients] = useState<ClientWithProjects[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const supabase = createSupabaseBrowserClient();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // Estado para controlar o sheet de Adicionar/Editar Cliente
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+
   const fetchClients = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
-        .from('clientes')
-        .select('*')
-        .order('created_at', { ascending: false });
+      .from('clientes')
+      .select('*, projetos(id, valor_total)')
+      .order('created_at', { ascending: false });
 
     if (error) {
-        setError(`Erro ao carregar clientes: ${error.message}`);
-        console.error(error);
+      setError(`Erro ao carregar clientes: ${error.message}`);
+      console.error(error);
     } else {
-        // Simulação de dados de projetos e valor para exibição
-        const clientsWithProjectData = data.map(client => ({
-            ...client,
-            projetos: Math.floor(Math.random() * 5),
-            valor_total: Math.random() * 15000,
-        }));
-        setClients(clientsWithProjectData as any); // Usando 'any' temporariamente para acomodar os novos campos simulados
+      const clientsWithProjectData = data.map(client => {
+        const projetos = Array.isArray(client.projetos) ? client.projetos : [];
+        const totalProjetos = projetos.length;
+        const valorTotal = projetos.reduce(
+          (acc, projeto) => acc + (projeto.valor_total || 0),
+          0
+        );
+        return {
+          ...client,
+          projetos: totalProjetos,
+          valor_total: valorTotal,
+        };
+      });
+      setClients(clientsWithProjectData);
     }
     setLoading(false);
   }, [supabase]);
@@ -77,6 +81,16 @@ export default function ClientsPage() {
   useEffect(() => {
     fetchClients();
   }, [fetchClients]);
+
+  const handleAddNew = () => {
+    setSelectedClient(null);
+    setIsSheetOpen(true);
+  };
+
+  const handleEdit = (client: Client) => {
+    setSelectedClient(client);
+    setIsSheetOpen(true);
+  };
   
   const handleDeleteClient = async (id: string) => {
     if (window.confirm("Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.")) {
@@ -88,7 +102,7 @@ export default function ClientsPage() {
         if (error) {
             alert(`Erro ao excluir cliente: ${error.message}`);
         } else {
-            setClients(clients.filter(client => client.id !== id));
+            fetchClients(); // Re-fetch para atualizar a lista e os totais
         }
     }
   };
@@ -101,60 +115,52 @@ export default function ClientsPage() {
     return <div className="p-5 text-center text-destructive bg-destructive/10 rounded-lg">{error}</div>;
   }
 
+  const totalClientes = clients.length;
+  const totalProjetosAtivos = clients.reduce((acc, client) => acc + client.projetos, 0);
+  const valorTotalProjetos = clients.reduce((acc, client) => acc + client.valor_total, 0);
+
   return (
     <div className="space-y-6">
-      {/* Cards de Estatísticas */}
+      <AddClientSheet 
+        isOpen={isSheetOpen}
+        onOpenChange={setIsSheetOpen}
+        clientToEdit={selectedClient}
+        onSuccess={() => {
+          fetchClients();
+          setIsSheetOpen(false);
+        }}
+      />
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <ClientStatCard title="Total de Clientes" value={String(clients.length)} description={<span className="text-gray-500">+2 novos este mês</span>} icon={Users} valueColor="text-green-600" />
-        <ClientStatCard title="Projetos Ativos" value="6" description={<span className="text-gray-500">Distribuídos entre 3 clientes</span>} icon={Briefcase} valueColor="text-brand-primary" />
-        <ClientStatCard title="Valor Total" value="R$ 27.000"  description={<span className="text-gray-500">Em projetos ativos</span>} icon={DollarSign} valueColor="text-green-600" />
+        <ClientStatCard 
+            title="Total de Clientes" 
+            value={String(totalClientes)} 
+            description={<span className="text-gray-500">Clientes cadastrados</span>} 
+            icon={Users} 
+            valueColor="text-green-600" 
+        />
+        <ClientStatCard 
+            title="Projetos Ativos" 
+            value={String(totalProjetosAtivos)} 
+            description={<span className="text-gray-500">Distribuídos entre os clientes</span>} 
+            icon={Briefcase} 
+            valueColor="text-brand-primary" 
+        />
+        <ClientStatCard 
+            title="Valor Total" 
+            value={valorTotalProjetos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}  
+            description={<span className="text-gray-500">Em projetos ativos</span>} 
+            icon={DollarSign} 
+            valueColor="text-green-600" 
+        />
       </div>
 
       <div className="bg-white rounded-xl shadow-card p-6">
         <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Clientes</h2>
-            <Button asChild>
-              <Link href="/dashboard/clients/new" className="bg-violet-600 text-white">
-                <Plus className="w-4 h-4 mr-2 " /> Novo Cliente
-              </Link>
-            </Button>
-
-
-            {/* cadastro de clientes */}
-          <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="outline">Cadastrar novo cliente</Button>
-      </SheetTrigger>
-      <SheetContent>
-        <SheetHeader>
-          <SheetTitle>Adicionar novo Cliente</SheetTitle>
-          <SheetDescription>
-            Novo cliente
-          </SheetDescription>
-        </SheetHeader>
-        <div className="grid flex-1 auto-rows-min gap-6 px-4">
-          <div className="grid gap-3">
-            <Label htmlFor="sheet-demo-name">Nome</Label>
-            <Input id="sheet-demo-name" defaultValue="Pedro Duarte" />
-          </div>
-          <div className="grid gap-3">
-            <Label htmlFor="sheet-demo-username">Usuário</Label>
-            <Input id="sheet-demo-username" defaultValue="@peduarte" />
-          </div>
-        </div>
-        <SheetFooter>
-          <Button type="submit">Save changes</Button>
-          <SheetClose asChild>
-            <Button variant="outline">Close</Button>
-          </SheetClose>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
-
-
+            <Button variant="outline" onClick={handleAddNew}>Cadastrar novo cliente</Button>
         </div>
 
-        {/* Tabela de Clientes com Tailwind CSS */}
         <div className="overflow-x-auto">
             {loading ? (
                  <p className="p-5 text-center text-muted-foreground">Carregando clientes...</p>
@@ -166,13 +172,13 @@ export default function ClientsPage() {
                                 <th scope="col" className="px-6 py-3">Nome</th>
                                 <th scope="col" className="px-6 py-3">Contato</th>
                                 <th scope="col" className="px-6 py-3">Origem</th>
-                                <th scope="col" className="px-6 py-3">Projetos</th>
+                                <th scope="col" className="px-6 py-3 text-center">Projetos</th>
                                 <th scope="col" className="px-6 py-3 text-right">Valor Total</th>
                                 <th scope="col" className="px-6 py-3 text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {paginatedClients.map((client: any) => (
+                            {paginatedClients.map((client) => (
                                 <tr key={client.id} className="bg-white border-b hover:bg-gray-50">
                                     <td className="px-6 py-4 font-medium text-gray-900">
                                         <div>{client.nome}</div>
@@ -185,7 +191,7 @@ export default function ClientsPage() {
                                     <td className="px-6 py-4">{client.origem}</td>
                                     <td className="px-6 py-4 text-center">{client.projetos}</td>
                                     <td className="px-6 py-4 text-right font-semibold">
-                                        {client.valor_total?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                        {client.valor_total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                     </td>
                                     <td className="px-6 py-4 text-center">
                                         <DropdownMenu>
@@ -198,8 +204,8 @@ export default function ClientsPage() {
                                                 <DropdownMenuItem asChild>
                                                     <Link href={`/dashboard/clients/${client.id}/edit`}><Eye className="w-4 h-4 mr-2"/> Ver</Link>
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem asChild>
-                                                    <Link href={`/dashboard/clients/${client.id}/edit`}><Edit className="w-4 h-4 mr-2"/> Editar</Link>
+                                                <DropdownMenuItem onClick={() => handleEdit(client)}>
+                                                    <Edit className="w-4 h-4 mr-2"/> Editar
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => handleDeleteClient(client.id)} className="text-red-500">
                                                     <Trash2 className="w-4 h-4 mr-2"/> Excluir
@@ -211,7 +217,6 @@ export default function ClientsPage() {
                             ))}
                         </tbody>
                     </table>
-                    {/* Controles de Paginação */}
                     <div className="flex items-center justify-end space-x-2 py-4">
                         <Button
                             variant="outline"

@@ -9,6 +9,7 @@ export type Client = {
   email_contato: string;
   telefone: string;
   cpf_cnpj: string | null;
+    website?: string; // <- garanta que existe e é string ou string | null
   origem: string;
 };
 

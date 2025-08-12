@@ -25,13 +25,13 @@ import { Button } from "@/components/ui/button"
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  deleteClient: (clientId: string) => void; // Adicionamos a nova prop
+  deleteItem?: (itemId: string) => void; // Generalizado para deleteItem e tornado opcional
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
-  deleteClient, // Recebemos a prop
+  deleteItem, // Recebemos a prop generalizada
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
 
@@ -47,7 +47,7 @@ export function DataTable<TData, TValue>({
     },
     // Passamos a função para a propriedade meta da tabela
     meta: {
-      deleteClient,
+      deleteItem,
     },
   })
 
@@ -90,7 +90,7 @@ export function DataTable<TData, TValue>({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  Nenhum cliente encontrado.
+                  Nenhum item encontrado.
                 </TableCell>
               </TableRow>
             )}
