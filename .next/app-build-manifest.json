@@ -40,6 +40,16 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/projects/board/[id]/page.js"
+    ],
+    "/dashboard/financeiro/visao-geral/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/financeiro/visao-geral/page.js"
+    ],
+    "/dashboard/financeiro/bancos/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/financeiro/bancos/page.js"
     ]
   }
 }
