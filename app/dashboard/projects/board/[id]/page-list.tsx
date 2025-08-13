@@ -56,7 +56,7 @@ export default function ProjectListPage({ boardId }: ProjectListPageProps) {
     return <div className="p-5 text-center text-destructive bg-destructive/10 rounded-lg">{error}</div>;
   }
 
-  const columns = [
+  const columns: Array<{ header: string; accessor: keyof Project }> = [
     { header: "Projeto", accessor: "descricao" },
     { header: "Status", accessor: "status_entrega" },
     { header: "Data de Entrega", accessor: "data_entrega" },
