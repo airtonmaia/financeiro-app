@@ -1,7 +1,5 @@
 {
-  "/dashboard/projects/page": "app/dashboard/projects/page.js",
-  "/dashboard/financeiro/fluxo-de-caixa/page": "app/dashboard/financeiro/fluxo-de-caixa/page.js",
-  "/dashboard/projects/board/[id]/page": "app/dashboard/projects/board/[id]/page.js",
-  "/dashboard/settings/customization/page": "app/dashboard/settings/customization/page.js",
-  "/dashboard/page": "app/dashboard/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/dashboard/invoices/page": "app/dashboard/invoices/page.js"
 }

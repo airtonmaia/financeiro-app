@@ -38,7 +38,7 @@ const navItems: NavItem[] = [
           { href: '#', text: 'Assinaturas', icon: Repeat },
       ]
     },
-    { href: '#', icon: FileText, text: 'Notas Fiscais' },
+    { href: '/dashboard/invoices', icon: FileText, text: 'Notas Fiscais' },
 ];
 
 // --- HOOKS ---

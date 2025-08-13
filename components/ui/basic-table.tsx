@@ -10,7 +10,11 @@ import {
 } from "@/components/ui/table";
 
 interface BasicTableProps<TData> {
-  columns: { header: string; accessor: keyof TData }[];
+  columns: {
+    header: string;
+    accessor?: keyof TData;
+    render?: (row: TData) => React.ReactNode; // Nova propriedade
+  }[];
   data: TData[];
 }
 
@@ -30,7 +34,7 @@ export function BasicTable<TData>({ columns, data }: BasicTableProps<TData>) {
             <TableRow key={rowIndex}>
               {columns.map((column, colIndex) => (
                 <TableCell key={colIndex}>
-                  {String(row[column.accessor])}
+                  {column.render ? column.render(row) : String(column.accessor && row[column.accessor])}
                 </TableCell>
               ))}
             </TableRow>
