@@ -1,5 +1,6 @@
 {
   "/auth/login/page": "app/auth/login/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
   "/dashboard/projects/page": "app/dashboard/projects/page.js",
   "/dashboard/page": "app/dashboard/page.js",
   "/dashboard/financeiro/fluxo-de-caixa/page": "app/dashboard/financeiro/fluxo-de-caixa/page.js",
