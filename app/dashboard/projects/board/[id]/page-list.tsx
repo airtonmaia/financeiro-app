@@ -4,8 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { Project } from '@/types';
-import { DataTable } from '@/components/ui/data-table';
-import { columns as projectColumns } from '@/app/dashboard/projects/columns';
+import { BasicTable } from '@/components/ui/basic-table';
 
 interface ProjectListPageProps {
   boardId: string;
@@ -57,13 +56,20 @@ export default function ProjectListPage({ boardId }: ProjectListPageProps) {
     return <div className="p-5 text-center text-destructive bg-destructive/10 rounded-lg">{error}</div>;
   }
 
+  const columns = [
+    { header: "Projeto", accessor: "descricao" },
+    { header: "Status", accessor: "status_entrega" },
+    { header: "Data de Entrega", accessor: "data_entrega" },
+    { header: "Valor", accessor: "valor_total" },
+  ];
+
   return (
     <div className="container mx-auto py-10">
       <h2 className="text-2xl font-bold mb-4">Lista de Projetos</h2>
       {loading ? (
         <p className="p-5 text-center text-muted-foreground">Carregando projetos...</p>
       ) : (
-        <DataTable columns={projectColumns} data={projects} deleteItem={handleDeleteProject} />
+        <BasicTable columns={columns} data={projects} />
       )}
     </div>
   );

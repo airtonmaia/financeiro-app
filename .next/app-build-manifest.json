@@ -1,9 +1,9 @@
 {
   "pages": {
-    "/dashboard/projects/page": [
+    "/dashboard/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/projects/page.js"
+      "static/chunks/app/dashboard/page.js"
     ],
     "/dashboard/layout": [
       "static/chunks/webpack.js",
@@ -21,40 +21,20 @@
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/clients/page.js"
     ],
-    "/dashboard/page": [
+    "/dashboard/projects/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/page.js"
-    ],
-    "/dashboard/financeiro/fluxo-de-caixa/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/financeiro/fluxo-de-caixa/page.js"
-    ],
-    "/dashboard/projects/new/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/projects/new/page.js"
+      "static/chunks/app/dashboard/projects/page.js"
     ],
     "/dashboard/projects/board/[id]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/projects/board/[id]/page.js"
     ],
-    "/dashboard/financeiro/visao-geral/page": [
+    "/dashboard/financeiro/fluxo-de-caixa/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/financeiro/visao-geral/page.js"
-    ],
-    "/dashboard/financeiro/bancos/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/financeiro/bancos/page.js"
-    ],
-    "/auth/login/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/auth/login/page.js"
+      "static/chunks/app/dashboard/financeiro/fluxo-de-caixa/page.js"
     ]
   }
 }
