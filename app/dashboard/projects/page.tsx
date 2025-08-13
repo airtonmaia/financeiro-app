@@ -151,7 +151,15 @@ export default function ProjectBoardsPage() {
       } else {
           const { data: { user } } = await supabase.auth.getUser();
           if (!user) return;
-          await supabase.from('quadros').insert({ nome: boardData.nome, descricao: boardData.descricao, cor: boardData.cor, user_id: user.id });
+          
+          const { data, error } = await supabase.from('quadros').insert({ nome: boardData.nome, descricao: boardData.descricao, cor: boardData.cor, user_id: user.id });
+          
+          if (error) {
+              console.error("Erro ao criar quadro:", error);
+              alert(`Erro ao criar quadro: ${error.message}`);
+              return; 
+          }
+          console.log("Quadro criado com sucesso:", data);
       }
       fetchBoards();
       setIsModalOpen(false);

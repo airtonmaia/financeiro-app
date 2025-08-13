@@ -35,6 +35,16 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/financeiro/fluxo-de-caixa/page.js"
+    ],
+    "/dashboard/settings/customization/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/settings/customization/page.js"
+    ],
+    "/dashboard/financeiro/emprestimos/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/financeiro/emprestimos/page.js"
     ]
   }
 }
