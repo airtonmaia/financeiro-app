@@ -3,13 +3,14 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { createSupabaseBrowserClient } from '@/lib/supabase';
 import {
   LayoutDashboard, Wallet, Users, FileText, DollarSign, ChevronDown, Landmark,
-  ArrowRightLeft, HandCoins, Building2, Repeat, Settings, LogOut, Palette, BarChart3, User
+  ArrowRightLeft, HandCoins, Building2, Repeat, Settings, LogOut, Palette, BarChart3, User, FolderKanban
 } from 'lucide-react';
 import {
     Sidebar, SidebarHeader, SidebarContent, SidebarFooter,
-    SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuSub, SidebarMenuSubItem
+    SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuSub, SidebarMenuSubItem, SidebarGroupLabel
 } from '@/components/ui/sidebar';
 
 // --- TIPOS E DADOS ---
@@ -19,6 +20,7 @@ type NavItem = {
   text: string;
   subItems?: { href: string; text: string; icon: React.ElementType; }[];
 };
+type Quadro = { id: string; nome: string; cor: string; };
 
 const navItems: NavItem[] = [
     { href: '/dashboard', icon: LayoutDashboard, text: 'Painel' },
@@ -88,15 +90,28 @@ function NavGroup({ icon: Icon, text, subItems, activeSubItem }: { icon: React.E
 
 export default function NewSidebar() {
     const pathname = usePathname();
+    const supabase = createSupabaseBrowserClient();
+    const [boards, setBoards] = React.useState<Quadro[]>([]);
+
+    React.useEffect(() => {
+        const fetchBoards = async () => {
+            const { data } = await supabase.from('quadros').select('id, nome, cor');
+            if (data) {
+                setBoards(data as Quadro[]);
+            }
+        };
+        fetchBoards();
+    }, [supabase]);
 
     return (
         <Sidebar className="p-2 bg-sidebar">
             <SidebarHeader>
                 <Link href="/dashboard" className="flex items-center justify-center lg:justify-start">
-                    <span className="ml-1 text-xl font-bold text-violet-700 dark:text-light-text">Agência 360</span>
+                    <span className="ml-1 mb-3 text-xl font-bold text-violet-700 dark:text-light-text">Agência 360</span>
                 </Link>
             </SidebarHeader>
             <SidebarContent>
+                <SidebarGroupLabel>Menu</SidebarGroupLabel>
                 <SidebarMenu>
                     {navItems.map((item) => (
                         item.subItems ? (
@@ -119,6 +134,21 @@ export default function NewSidebar() {
                         )
                     ))}
                 </SidebarMenu>
+                 
+                <SidebarMenu>
+                    <SidebarGroupLabel>Quadros</SidebarGroupLabel>
+                    {boards.map(board => (
+                        <SidebarMenuItem key={board.id}>
+                            <SidebarMenuButton asChild isActive={pathname.includes(board.id)}>
+                                <Link href={`/dashboard/projects/board/${board.id}`}>
+                                    <FolderKanban className="w-5 h-5 mr-2" color={board.cor} />
+                                    <span>{board.nome}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    ))}
+                </SidebarMenu>
+
             </SidebarContent>
             <SidebarFooter>
                 <SidebarMenu>
