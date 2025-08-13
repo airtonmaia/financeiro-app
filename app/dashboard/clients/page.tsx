@@ -25,7 +25,7 @@ type ClientWithProjects = Client & {
 
 function ClientStatCard({ title, value, description, icon: Icon, valueColor }: { title: string; value: string; description: React.ReactNode; icon: React.ElementType; valueColor?: string; }) {
     return (
-        <div className="bg-white border p-5 rounded-xl">
+        <div className="bg-card border p-5 rounded-xl">
             <div className="flex justify-between items-start">
                 <p className="text-muted-foreground font-semibold">{title}</p>
                 <Icon className="w-5 h-5 text-muted-foreground" />
@@ -61,13 +61,11 @@ export default function ClientsPage() {
       console.error(error);
     } else {
       const clientsWithProjectData = data.map(client => {
-        // Garante que client.projetos é um array, mesmo que venha nulo ou indefinido
         const projetos = Array.isArray(client.projetos) ? client.projetos : [];
         const totalProjetos = projetos.length;
         
         const valorTotal = projetos.reduce(
           (acc: number, projeto: { id: string; valor_total: number | null }) => {
-            // Verificação mais robusta para garantir que valor_total é um número
             const valor = (projeto && typeof projeto.valor_total === 'number') ? projeto.valor_total : 0;
             return acc + valor;
           },
@@ -141,27 +139,27 @@ export default function ClientsPage() {
         <ClientStatCard 
             title="Total de Clientes" 
             value={String(totalClientes)} 
-            description={<span className="text-gray-500">Clientes cadastrados</span>} 
+            description="Clientes cadastrados" 
             icon={Users} 
-            valueColor="text-green-600" 
+            valueColor="text-success" 
         />
         <ClientStatCard 
             title="Projetos Ativos" 
             value={String(totalProjetosAtivos)} 
-            description={<span className="text-gray-500">Distribuídos entre os clientes</span>} 
+            description="Distribuídos entre os clientes" 
             icon={Briefcase} 
-            valueColor="text-brand-primary" 
+            valueColor="text-primary" 
         />
         <ClientStatCard 
             title="Valor Total" 
             value={valorTotalProjetos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}  
-            description={<span className="text-gray-500">Em projetos ativos</span>} 
+            description="Em projetos ativos" 
             icon={DollarSign} 
-            valueColor="text-green-600" 
+            valueColor="text-success" 
         />
       </div>
 
-      <div className="bg-white rounded-xl shadow-card p-6">
+      <div className="bg-card rounded-xl shadow-card p-6">
         <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Clientes</h2>
             <Button variant="outline" onClick={handleAddNew}>Cadastrar novo cliente</Button>
@@ -172,8 +170,8 @@ export default function ClientsPage() {
                  <p className="p-5 text-center text-muted-foreground">Carregando clientes...</p>
             ) : (
                 <>
-                    <table className="w-full text-sm text-left text-gray-500">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+                    <table className="w-full text-sm text-left text-muted-foreground">
+                        <thead className="text-xs uppercase bg-muted text-muted-foreground">
                             <tr>
                                 <th scope="col" className="px-6 py-3">Nome</th>
                                 <th scope="col" className="px-6 py-3">Contato</th>
@@ -185,14 +183,14 @@ export default function ClientsPage() {
                         </thead>
                         <tbody>
                             {paginatedClients.map((client) => (
-                                <tr key={client.id} className="bg-white border-b hover:bg-gray-50">
-                                    <td className="px-6 py-4 font-medium text-gray-900">
+                                <tr key={client.id} className="border-b border-border hover:bg-muted">
+                                    <td className="px-6 py-4 font-medium text-foreground">
                                         <div>{client.nome}</div>
-                                        <div className="text-xs text-gray-500">{client.empresa}</div>
+                                        <div className="text-xs text-muted-foreground">{client.empresa}</div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div>{client.email_contato}</div>
-                                        <div className="text-xs text-gray-500">{client.telefone}</div>
+                                        <div className="text-xs text-muted-foreground">{client.telefone}</div>
                                     </td>
                                     <td className="px-6 py-4">{client.origem}</td>
                                     <td className="px-6 py-4 text-center">{client.projetos}</td>
@@ -202,7 +200,7 @@ export default function ClientsPage() {
                                     <td className="px-6 py-4 text-center">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <button className="p-2 rounded-full hover:bg-gray-200">
+                                                <button className="p-2 rounded-full hover:bg-accent">
                                                     <MoreHorizontal className="w-4 h-4" />
                                                 </button>
                                             </DropdownMenuTrigger>
@@ -213,7 +211,7 @@ export default function ClientsPage() {
                                                 <DropdownMenuItem onClick={() => handleEdit(client)}>
                                                     <Edit className="w-4 h-4 mr-2"/> Editar
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleDeleteClient(client.id)} className="text-red-500">
+                                                <DropdownMenuItem onClick={() => handleDeleteClient(client.id)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
                                                     <Trash2 className="w-4 h-4 mr-2"/> Excluir
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>

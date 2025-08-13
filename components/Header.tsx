@@ -9,6 +9,10 @@ import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { type User } from '@supabase/supabase-js';
 import { Plus, UserPlus, FolderPlus, ArrowUpCircle, ArrowDownCircle, Bell, Search, ChevronDown, Moon, Sun } from 'lucide-react';
+import { Separator } from "@/components/ui/separator";
+import {
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
 
 export default function Header() {
     const supabase = createSupabaseBrowserClient();
@@ -70,63 +74,69 @@ export default function Header() {
     const getUserInitials = () => user?.email?.charAt(0).toUpperCase() || '?';
 
     return (
-        <header className="bg-white p-4 lg:p-6 flex justify-between items-center border-b border-light-tertiary dark:bg-dark-secondary dark:border-dark-tertiary">
+        <header className="bg-card p-4 lg:p-6 flex justify-between items-center border-b border-border">
+           <div className="flex items-center">
+            <SidebarTrigger className="-ml-1" />
+            <Separator
+              orientation="vertical"
+              className="mr-2 data-[orientation=vertical]:h-4"
+            />            
             <div className="relative hidden md:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-text" />
-              <input type="text" placeholder="Pesquisar..." className="bg-gray-100 dark:bg-dark-tertiary rounded-lg pl-10 pr-4 py-2 w-80 focus:outline-none focus:ring-2 focus:ring-brand-blue" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <input type="text" placeholder="Pesquisar..." className="bg-muted rounded-lg pl-10 pr-4 py-2 w-80 focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
-            
+            </div>
             <div className="flex-1 md:flex-grow-0 flex justify-end items-center gap-4">
                 <div className="relative" ref={quickAccessRef}>
-                    <button onClick={() => setIsQuickAccessOpen(!isQuickAccessOpen)} className="bg-brand-primary hover:bg-opacity-90 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg" title="Acesso Rápido">
+                    <button onClick={() => setIsQuickAccessOpen(!isQuickAccessOpen)} className="bg-primary hover:bg-opacity-90 text-primary-foreground rounded-full w-10 h-10 flex items-center justify-center shadow-lg" title="Acesso Rápido">
                       <Plus className="w-5 h-5" />
                     </button>
                     {isQuickAccessOpen && (
-                        <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-dark-secondary rounded-lg shadow-xl z-10 border border-light-tertiary dark:border-dark-tertiary">
+                        <div className="absolute right-0 mt-2 w-56 bg-popover text-popover-foreground rounded-lg shadow-xl z-10 border border-border">
                             <div className="py-2">
-                                <Link href="/dashboard/clients/new" className="flex items-center px-4 py-2 text-dark-text dark:text-light-text hover:bg-gray-100 dark:hover:bg-dark-tertiary"><UserPlus className="w-4 h-4 mr-3 text-gray-text" />Novo Cliente</Link>
-                                <Link href="/dashboard/projects/new" className="flex items-center px-4 py-2 text-dark-text dark:text-light-text hover:bg-gray-100 dark:hover:bg-dark-tertiary"><FolderPlus className="w-4 h-4 mr-3 text-gray-text" />Novo Projeto</Link>
-                                <div className="border-t border-light-tertiary dark:border-dark-tertiary my-1"></div>
-                                <Link href="#" className="flex items-center px-4 py-2 text-dark-text dark:text-light-text hover:bg-gray-100 dark:hover:bg-dark-tertiary"><ArrowUpCircle className="w-4 h-4 mr-3 text-success-text" />Nova Receita</Link>
-                                <Link href="#" className="flex items-center px-4 py-2 text-dark-text dark:text-light-text hover:bg-gray-100 dark:hover:bg-dark-tertiary"><ArrowDownCircle className="w-4 h-4 mr-3 text-danger-text" />Nova Despesa</Link>
+                                <Link href="/dashboard/clients/new" className="flex items-center px-4 py-2 hover:bg-accent hover:text-accent-foreground rounded-md"><UserPlus className="w-4 h-4 mr-3 text-muted-foreground" />Novo Cliente</Link>
+                                <Link href="/dashboard/projects/new" className="flex items-center px-4 py-2 hover:bg-accent hover:text-accent-foreground rounded-md"><FolderPlus className="w-4 h-4 mr-3 text-muted-foreground" />Novo Projeto</Link>
+                                <div className="border-t border-border my-1"></div>
+                                <Link href="#" className="flex items-center px-4 py-2 hover:bg-accent hover:text-accent-foreground rounded-md"><ArrowUpCircle className="w-4 h-4 mr-3 text-success-500" />Nova Receita</Link>
+                                <Link href="#" className="flex items-center px-4 py-2 hover:bg-accent hover:text-accent-foreground rounded-md"><ArrowDownCircle className="w-4 h-4 mr-3 text-error-500" />Nova Despesa</Link>
                             </div>
                         </div>
                     )}
                 </div>
 
-                <button className="bg-gray-100 dark:bg-dark-tertiary hover:bg-gray-200 dark:hover:bg-dark-tertiary/80 text-gray-text rounded-full w-10 h-10 flex items-center justify-center relative" title="Notificações">
+                <button className="bg-muted hover:bg-accent hover:text-accent-foreground text-muted-foreground rounded-full w-10 h-10 flex items-center justify-center relative" title="Notificações">
                     <Bell className="w-5 h-5" />
                 </button>
 
                 <div className="relative" ref={userMenuRef}>
                     <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-gray-200 dark:bg-dark-tertiary rounded-full flex items-center justify-center font-bold text-dark-text dark:text-light-text">
+                        <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center font-bold text-muted-foreground">
                             {getUserInitials()}
                         </div>
                         <div className="hidden sm:block">
-                            <p className="font-semibold text-sm text-dark-text dark:text-light-text">Airton Maia</p>
-                            <p className="text-xs text-gray-text">{user ? user.email : '...'}</p>
+                            <p className="font-semibold text-sm text-foreground">Airton Maia</p>
+                            <p className="text-xs text-muted-foreground">{user ? user.email : '...'}</p>
                         </div>
-                        <ChevronDown className="w-4 h-4 text-gray-text" />
+                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
                     </button>
                     {isUserMenuOpen && (
-                         <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-dark-secondary rounded-lg shadow-xl z-10 border border-light-tertiary dark:border-dark-tertiary">
-                            <div className="p-4 border-b border-light-tertiary dark:border-dark-tertiary">
-                                <p className="font-bold text-dark-text dark:text-light-text">Airton Maia</p>
-                                <p className="text-sm text-gray-text">{user?.email}</p>
+                         <div className="absolute right-0 mt-2 w-64 bg-popover text-popover-foreground rounded-lg shadow-xl z-10 border border-border">
+                            <div className="p-4 border-b border-border">
+                                <p className="font-bold text-popover-foreground">Airton Maia</p>
+                                <p className="text-sm text-muted-foreground">{user?.email}</p>
                             </div>
                             <div className="py-2">
-                                <a href="#" className="block px-4 py-2 text-dark-text dark:text-light-text hover:bg-gray-100 dark:hover:bg-dark-tertiary">Meu Perfil</a>
-                                <a href="#" className="block px-4 py-2 text-dark-text dark:text-light-text hover:bg-gray-100 dark:hover:bg-dark-tertiary">Configurações</a>
-                                <div className="flex justify-between items-center px-4 py-2 text-dark-text dark:text-light-text hover:bg-gray-100 dark:hover:bg-dark-tertiary">
+                                <a href="#" className="block px-4 py-2 hover:bg-accent hover:text-accent-foreground rounded-md">Meu Perfil</a>
+                                <a href="#" className="block px-4 py-2 hover:bg-accent hover:text-accent-foreground rounded-md">Configurações</a>
+                                <div className="flex justify-between items-center px-4 py-2 hover:bg-accent hover:text-accent-foreground rounded-md">
                                     <span>Dark Mode</span>
-                                    <button onClick={toggleDarkMode} className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${isDarkMode ? 'bg-brand-blue' : 'bg-gray-300'}`}>
+                                    <button onClick={toggleDarkMode} className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${isDarkMode ? 'bg-primary' : 'bg-muted'}`}>
                                         <span className={`w-3 h-3 bg-white rounded-full transition-transform ${isDarkMode ? 'transform translate-x-5' : ''}`}></span>
                                     </button>
                                 </div>
                             </div>
-                            <div className="border-t border-light-tertiary dark:border-dark-tertiary">
-                                <button onClick={handleSignOut} className="w-full text-left px-4 py-2 text-dark-text dark:text-light-text hover:bg-gray-100 dark:hover:bg-dark-tertiary">Sair</button>
+                            <div className="border-t border-border">
+                                <button onClick={handleSignOut} className="w-full text-left px-4 py-2 hover:bg-accent hover:text-accent-foreground rounded-md">Sair</button>
                             </div>
                         </div>
                     )}

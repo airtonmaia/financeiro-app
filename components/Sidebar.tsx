@@ -1,15 +1,16 @@
-// components/Sidebar.tsx
-// Componente reutilizável para a barra de navegação lateral, agora com o menu de Configurações.
-
 'use client';
 
-import { useState } from 'react';
+import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Wallet, Users, FileText, DollarSign, ChevronDown, Landmark,
   ArrowRightLeft, HandCoins, Building2, Repeat, Settings, LogOut, Palette, BarChart3, User
 } from 'lucide-react';
+import {
+    Sidebar, SidebarHeader, SidebarContent, SidebarFooter,
+    SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuSub, SidebarMenuSubItem
+} from '@/components/ui/sidebar';
 
 // --- TIPOS E DADOS ---
 type NavItem = {
@@ -38,70 +39,65 @@ const navItems: NavItem[] = [
     { href: '#', icon: FileText, text: 'Notas Fiscais' },
 ];
 
-// --- COMPONENTES ---
-
-function NavLink({ href, icon: Icon, text, active }: { href: string; icon: React.ElementType; text: string; active: boolean }) {
-  return (
-    <Link
-      href={href}
-      className={`flex items-center gap-0 m-0 text-sm text-gray-800 p-3 rounded-lg transition-colors hover:bg-violet-600 hover:text-white duration-200 ${
-        active
-          ? 'bg-violet-600/10 text-violet-700 font-semibold'
-          : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:hover:bg-dark-tertiary dark:hover:text-white'
-      }`}
-    >
-      <Icon className="w-5 h-5" />
-      <span className="ml-4 hidden lg:block">{text}</span>
-    </Link>
-  );
+// --- HOOKS ---
+function usePrevious<T>(value: T): T | undefined {
+    const ref = React.useRef<T>();
+    React.useEffect(() => {
+        ref.current = value;
+    });
+    return ref.current;
 }
 
+// --- COMPONENTES ---
+
 function NavGroup({ icon: Icon, text, subItems, activeSubItem }: { icon: React.ElementType; text: string; subItems: { href: string; text: string; icon: React.ElementType; }[]; activeSubItem: boolean; }) {
-    const [isOpen, setIsOpen] = useState(activeSubItem);
+    const pathname = usePathname();
+    const [isOpen, setIsOpen] = React.useState(activeSubItem);
+    const wasActive = usePrevious(activeSubItem);
+
+    React.useEffect(() => {
+        if (activeSubItem && !wasActive) {
+            setIsOpen(true);
+        }
+    }, [activeSubItem, wasActive]);
 
     return (
-        <div>
-            <button 
-                onClick={() => setIsOpen(!isOpen)}
-                className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors duration-200 ${
-                    activeSubItem ? 'text-violet-700 font-semibold' : 'text-gray-500'
-                } hover:bg-gray-100 hover:text-gray-800 dark:hover:bg-dark-tertiary dark:hover:text-white`}
-            >
-                <div className="flex items-center">
+        <SidebarMenuItem>
+            <SidebarMenuButton onClick={() => setIsOpen(!isOpen)} isActive={activeSubItem} className="justify-between">
+                <div className="flex items-center gap-2">
                     <Icon className="w-5 h-5" />
-                    <span className="ml-4 hidden lg:block">{text}</span>
+                    <span>{text}</span>
                 </div>
-                <ChevronDown className={`w-4 h-4 transition-transform hidden lg:block ${isOpen ? 'rotate-180' : ''}`} />
-            </button>
+                <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </SidebarMenuButton>
             {isOpen && (
-                <div className="mt-2 pl-4 space-y-1">
-                    {subItems.map(item => (
-                        <NavLink 
-                            key={item.text}
-                            href={item.href}
-                            icon={item.icon}
-                            text={item.text}
-                            active={usePathname() === item.href}
-                        />
+                <SidebarMenuSub>
+                    {subItems.map(sub => (
+                        <SidebarMenuSubItem key={sub.text}>
+                            <Link href={sub.href} className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-sidebar-accent">
+                                <sub.icon className="w-4 h-4" />
+                                <span>{sub.text}</span>
+                            </Link>
+                        </SidebarMenuSubItem>
                     ))}
-                </div>
+                </SidebarMenuSub>
             )}
-        </div>
+        </SidebarMenuItem>
     );
 }
 
-export default function Sidebar() {
+export default function NewSidebar() {
     const pathname = usePathname();
 
     return (
-        <aside className="w-20 lg:w-64 bg-white p-4 flex flex-col justify-between border-r border-light-tertiary dark:bg-dark-secondary dark:border-dark-tertiary">
-            <div>
-                <div className="p-3 mb-10">
-                    <Link href="/dashboard" className="flex items-center justify-center lg:justify-start">
-                        <span className="ml-1 text-xl font-bold hidden lg:block text-violet-700 dark:text-light-text">Agência 360</span>
-                    </Link>
-                </div>
-                <nav className="flex flex-col space-y-2 text-sm ">
+        <Sidebar className="p-2 bg-sidebar">
+            <SidebarHeader>
+                <Link href="/dashboard" className="flex items-center justify-center lg:justify-start">
+                    <span className="ml-1 text-xl font-bold text-violet-700 dark:text-light-text">Agência 360</span>
+                </Link>
+            </SidebarHeader>
+            <SidebarContent>
+                <SidebarMenu>
                     {navItems.map((item) => (
                         item.subItems ? (
                             <NavGroup 
@@ -112,29 +108,39 @@ export default function Sidebar() {
                                 activeSubItem={item.subItems.some(sub => pathname.startsWith(sub.href))}
                             />
                         ) : (
-                            <NavLink 
-                                key={item.text}
-                                href={item.href!}
-                                icon={item.icon} 
-                                text={item.text} 
-                                active={pathname === item.href}
-                            />
+                            <SidebarMenuItem key={item.text}>
+                                <SidebarMenuButton asChild isActive={pathname === item.href}>
+                                    <Link href={item.href!}>
+                                        <item.icon className="w-5 h-5" />
+                                        <span>{item.text}</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
                         )
                     ))}
-                </nav>
-            </div>
-            <div className="flex flex-col space-y-2">
-                <NavGroup 
-                    icon={Settings}
-                    text="Configurações"
-                    subItems={[
-                        { href: '/dashboard/settings/profile', text: 'Perfil', icon: User },
-                        { href: '/dashboard/settings/customization', text: 'Personalização', icon: Palette }
-                    ]}
-                    activeSubItem={pathname.startsWith('/dashboard/settings')}
-                />
-                <NavLink href="/auth/login" icon={LogOut} text="Sair" active={false} />
-            </div>
-        </aside>
+                </SidebarMenu>
+            </SidebarContent>
+            <SidebarFooter>
+                <SidebarMenu>
+                    <NavGroup 
+                        icon={Settings}
+                        text="Configurações"
+                        subItems={[
+                            { href: '/dashboard/settings/profile', text: 'Perfil', icon: User },
+                            { href: '/dashboard/settings/customization', text: 'Personalização', icon: Palette }
+                        ]}
+                        activeSubItem={pathname.startsWith('/dashboard/settings')}
+                    />
+                    <SidebarMenuItem>
+                        <SidebarMenuButton asChild>
+                            <Link href="/auth/login">
+                                <LogOut className="w-5 h-5" />
+                                <span>Sair</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarFooter>
+        </Sidebar>
     );
 }

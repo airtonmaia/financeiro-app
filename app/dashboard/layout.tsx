@@ -2,7 +2,21 @@
 // Layout principal para a área autenticada, agora com suporte a dark mode.
 
 import Header from '@/components/Header';
-import Sidebar from '@/components/Sidebar';
+import NewSidebar from '@/components/Sidebar';
+import { Separator } from "@/components/ui/separator";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
 
 export default function DashboardLayout({
   children,
@@ -10,15 +24,23 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    // ADIÇÃO: Classes dark:* para alterar o fundo e o texto no dark mode
-    <div className="flex h-screen bg-light-primary text-dark-text font-sans dark:bg-dark-primary dark:text-light-text ">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
-        <Header />
-        <main className="flex-1 p-6 overflow-y-auto">
-          {children}
-        </main>
-      </div>
-    </div>
+    <SidebarProvider >
+        <NewSidebar/>
+        <SidebarInset>
+          <Header />
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+          
+        </header>
+
+
+
+<div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+  {children}
+</div>
+
+        </SidebarInset>
+      
+    </SidebarProvider>
   );
 }
+
