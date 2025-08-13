@@ -27,6 +27,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 import ProjectListPage from '@/app/dashboard/projects/board/[id]/page-list';
 
+// --- HELPERS ---
+const formatBRL = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(value);
+};
+
 // --- COMPONENTES ---
 
 function ProjectCard({ project, onOpen, onEdit, onMove, onDelete }: { project: Project & { task_groups: TaskGroup[] }; onOpen: () => void; onEdit: () => void; onMove: () => void; onDelete: () => void; }) {
@@ -500,7 +508,7 @@ function ProjectDetailView({ project, onUpdate }: { project: Project & { task_gr
                             </tr>
                             <tr>
                                 <td className="py-3 font-medium text-foreground inline-flex items-center"><DollarSign className="h-5 mr-2 text-primary" />Valor do Projeto</td>
-                                <td className="py-3 text-muted-foreground">{project.valor_total ? `R$ ${project.valor_total.toFixed(2)}` : 'N/A'}</td>
+                                <td className="py-3 text-muted-foreground">{project.valor_total ? `R$ ${formatBRL(project.valor_total)}` : 'N/A'}</td>
                             </tr>
                             <tr>
                                 <td className="py-3 font-medium text-foreground inline-flex items-center"><CircleUserRound className="h-5 mr-2 text-primary" />Responsáveis</td>
@@ -588,7 +596,7 @@ function StatusManagerModal({ isOpen, onClose, onSave, statusToEdit, boardId }: 
                                  </button>
                              ))}
                              <div className={`p-2 rounded-lg border-2 flex items-center gap-2 relative ${!predefinedColors.some(pc => pc.value === color) ? 'border-primary' : 'border-border'}`}>
-                                 <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="w-5 h-5 p-0 border-none rounded cursor-pointer bg-transparent absolute opacity-0" />
+                                 <Input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="w-7 h-7 absolute opacity-0 cursor-pointer" />
                                   <span className="w-5 h-5 rounded-full" style={{ backgroundColor: color }}></span>
                                  <span className="text-sm">Outra</span>
                              </div>

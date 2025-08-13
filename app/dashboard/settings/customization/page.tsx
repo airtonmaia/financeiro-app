@@ -6,6 +6,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { Plus, Trash2, Tag, ArrowUp, ArrowDown, HandCoins, Palette } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 // --- TIPOS ---
 type Categoria = {
@@ -34,7 +36,7 @@ function CategoryManager({ title, icon: Icon, categoryType, initialCategories }:
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const { data, error } = await supabase
+        const { data } = await supabase
             .from('categorias')
             .insert({ nome: newCategoryName, tipo: categoryType, user_id: user.id })
             .select()
@@ -54,27 +56,26 @@ function CategoryManager({ title, icon: Icon, categoryType, initialCategories }:
     };
 
     return (
-        <div className="bg-white dark:bg-dark-secondary p-6 rounded-xl shadow-card">
-            <h3 className="font-bold text-dark-text dark:text-light-text mb-4 flex items-center gap-2"><Icon className="w-5 h-5" /> {title}</h3>
+        <div className="bg-card p-6 rounded-xl shadow-card">
+            <h3 className="font-bold text-foreground mb-4 flex items-center gap-2"><Icon className="w-5 h-5" /> {title}</h3>
             <div className="space-y-2 mb-4">
                 {categories.map(cat => (
-                    <div key={cat.id} className="flex justify-between items-center bg-gray-50 dark:bg-dark-tertiary p-2 rounded-lg">
-                        <span className="text-sm">{cat.nome}</span>
-                        <button onClick={() => handleDeleteCategory(cat.id)} className="text-gray-text hover:text-danger-text p-1">
+                    <div key={cat.id} className="flex justify-between items-center bg-muted p-2 rounded-lg">
+                        <span className="text-sm text-muted-foreground">{cat.nome}</span>
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteCategory(cat.id)} className="w-8 h-8 text-muted-foreground hover:text-destructive">
                             <Trash2 className="w-4 h-4" />
-                        </button>
+                        </Button>
                     </div>
                 ))}
             </div>
             <form onSubmit={handleAddCategory} className="flex gap-2">
-                <input type="text" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} placeholder="Nova categoria..." className="flex-1 p-2 bg-gray-50 dark:bg-dark-tertiary border border-light-tertiary dark:border-dark-tertiary rounded-lg" />
-                <button type="submit" className="bg-violet-600 text-white font-semibold p-2 rounded-lg"><Plus className="w-5 h-5" /></button>
+                <Input type="text" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} placeholder="Nova categoria..." className="flex-1" />
+                <Button type="submit" size="icon"><Plus className="w-5 h-5" /></Button>
             </form>
         </div>
     );
 }
 
-// NOVO: Componente para gerenciar Status de Projetos
 function StatusManager({ initialStatuses }: { initialStatuses: ProjectStatus[] }) {
     const supabase = createSupabaseBrowserClient();
     const [statuses, setStatuses] = useState(initialStatuses);
@@ -84,7 +85,6 @@ function StatusManager({ initialStatuses }: { initialStatuses: ProjectStatus[] }
     const handleUpdateStatus = async (id: string, field: 'name' | 'color', value: string) => {
         const updatedStatuses = statuses.map(s => s.id === id ? { ...s, [field]: value } : s);
         setStatuses(updatedStatuses);
-        
         await supabase.from('project_statuses').update({ [field]: value }).eq('id', id);
     };
 
@@ -94,7 +94,7 @@ function StatusManager({ initialStatuses }: { initialStatuses: ProjectStatus[] }
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const { data, error } = await supabase
+        const { data } = await supabase
             .from('project_statuses')
             .insert({ name: newStatusName, color: newStatusColor, user_id: user.id })
             .select()
@@ -115,25 +115,25 @@ function StatusManager({ initialStatuses }: { initialStatuses: ProjectStatus[] }
     };
 
     return (
-        <div className="bg-white dark:bg-dark-secondary p-6 rounded-xl shadow-card">
-            <h3 className="font-bold text-dark-text dark:text-light-text mb-4 flex items-center gap-2"><Palette className="w-5 h-5" /> Status de Projetos</h3>
+        <div className="bg-card p-6 rounded-xl shadow-card">
+            <h3 className="font-bold text-foreground mb-4 flex items-center gap-2"><Palette className="w-5 h-5" /> Status de Projetos</h3>
             <div className="space-y-2 mb-4">
                 {statuses.map(status => (
-                    <div key={status.id} className="flex items-center gap-2 bg-gray-50 dark:bg-dark-tertiary p-2 rounded-lg">
-                        <input type="color" value={status.color} onChange={(e) => handleUpdateStatus(status.id, 'color', e.target.value)} className="w-8 h-8 p-0 border-none rounded cursor-pointer bg-transparent" />
-                        <input type="text" value={status.name} onBlur={(e) => handleUpdateStatus(status.id, 'name', e.target.value)} onChange={(e) => setStatuses(statuses.map(s => s.id === status.id ? { ...s, name: e.target.value } : s))} className="flex-1 bg-transparent text-sm focus:outline-none" />
+                    <div key={status.id} className="flex items-center gap-2 bg-muted p-2 rounded-lg">
+                        <Input type="color" value={status.color} onChange={(e) => handleUpdateStatus(status.id, 'color', e.target.value)} className="w-10 h-10 p-1" />
+                        <Input type="text" value={status.name} onBlur={(e) => handleUpdateStatus(status.id, 'name', e.target.value)} onChange={(e) => setStatuses(statuses.map(s => s.id === status.id ? { ...s, name: e.target.value } : s))} className="flex-1 bg-transparent text-sm" />
                         {!status.is_default && (
-                            <button onClick={() => handleDeleteStatus(status.id)} className="text-gray-text hover:text-danger-text p-1">
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteStatus(status.id)} className="w-8 h-8 text-muted-foreground hover:text-destructive">
                                 <Trash2 className="w-4 h-4" />
-                            </button>
+                            </Button>
                         )}
                     </div>
                 ))}
             </div>
             <form onSubmit={handleAddStatus} className="flex gap-2">
-                <input type="color" value={newStatusColor} onChange={(e) => setNewStatusColor(e.target.value)} className="w-10 h-10 p-0 border-none rounded-lg cursor-pointer bg-transparent" />
-                <input type="text" value={newStatusName} onChange={(e) => setNewStatusName(e.target.value)} placeholder="Novo status..." className="flex-1 p-2 bg-gray-50 dark:bg-dark-tertiary border border-light-tertiary dark:border-dark-tertiary rounded-lg" />
-                <button type="submit" className="bg-violet-600 text-white font-semibold p-2 rounded-lg"><Plus className="w-5 h-5" /></button>
+                <Input type="color" value={newStatusColor} onChange={(e) => setNewStatusColor(e.target.value)} className="w-12 h-12 p-1" />
+                <Input type="text" value={newStatusName} onChange={(e) => setNewStatusName(e.target.value)} placeholder="Novo status..." className="flex-1" />
+                <Button type="submit" size="icon"><Plus className="w-5 h-5" /></Button>
             </form>
         </div>
     );
@@ -173,15 +173,13 @@ export default function CustomizationPage() {
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl font-bold">Personalização</h1>
-                    <p className="text-sm text-gray-text">Gerencie as categorias e status usados em todo o sistema.</p>
+                    <p className="text-sm text-muted-foreground">Gerencie as categorias e status usados em todo o sistema.</p>
                 </div>
-                 <button className="bg-brand-blue hover:bg-brand-blue/90 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2">
-                    <Plus className="w-4 h-4" /> Nova Categoria
-                </button>
+                 <Button><Plus className="w-4 h-4 mr-2" /> Nova Categoria</Button>
             </div>
 
             {loading ? (
-                <p className="text-center p-10">A carregar...</p>
+                <p className="text-center p-10 text-muted-foreground">A carregar...</p>
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="lg:col-span-2">
