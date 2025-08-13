@@ -1,14 +1,13 @@
 // app/layout.tsx
 
 import type { Metadata } from "next";
-// CORREÇÃO: Importando a nova fonte 'Source_Sans_3' (nome atual da Source Sans Pro)
 import { Source_Sans_3 } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "next-themes";
 
-// CORREÇÃO: Configurando a nova fonte
 const sourceSans = Source_Sans_3({ 
   subsets: ["latin"],
-  variable: '--font-source-sans', // Criando uma variável CSS para a fonte
+  variable: '--font-source-sans', 
 });
 
 export const metadata: Metadata = {
@@ -22,9 +21,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-br">
-      {/* CORREÇÃO: Aplicando a variável da fonte ao body */}
-      <body className={`${sourceSans.variable} font-sans`}>{children}</body>
+    <html lang="pt-br" suppressHydrationWarning>
+      <body className={`${sourceSans.variable} font-sans`}>
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+        >
+            {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
