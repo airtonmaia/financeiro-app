@@ -117,7 +117,7 @@ export default function NewSidebar() {
     return (
         <Sidebar className="p-2 bg-sidebar">
             <SidebarHeader>
-                <Link href="/dashboard" className="flex items-center justify-center lg:justify-start ">
+                <Link href="/dashboard" className="flex items-center lg:justify-start ">
                     {logoUrl ? (
                         <img src={logoUrl} alt="Logo" className="h-full w-24" />
                     ) : (
