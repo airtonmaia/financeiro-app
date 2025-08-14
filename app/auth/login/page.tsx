@@ -1,31 +1,58 @@
 // app/auth/login/page.tsx
-// Componente de página para o login de usuários.
-
 'use client';
-import { useState } from 'react';
-// CORREÇÃO: Importa a função para criar o cliente do Supabase
-import { createSupabaseBrowserClient } from '../../../lib/supabase';
+
+import { useState, useEffect } from 'react';
+import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link'; // Usar Link para navegação interna
+import Link from 'next/link';
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Globe } from 'lucide-react'; // Using a generic icon
 
 export default function LoginPage() {
-  // CORREÇÃO: Cria a instância do cliente Supabase chamando a função
   const supabase = createSupabaseBrowserClient();
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const router = useRouter();
 
-  // Função para lidar com o processo de login.
+  useEffect(() => {
+    const fetchLogo = async () => {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('logo_url')
+            .not('logo_url', 'is', null)
+            .limit(1);
+
+        if (error) {
+            console.error('Erro ao buscar logo:', error);
+            return;
+        }
+
+        if (data && data.length > 0 && data[0].logo_url) {
+            setLogoUrl(data[0].logo_url);
+        }
+    };
+    fetchLogo();
+  }, [supabase]);
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
 
     try {
-      // Chama o método signInWithPassword do Supabase para autenticar o usuário.
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -35,65 +62,74 @@ export default function LoginPage() {
         throw error;
       }
       
-      // O middleware irá detetar a sessão de usuário e fazer o redirecionamento para /dashboard.
       router.refresh();
 
     } catch (error: any) {
       setMessage(`Erro ao fazer login: ${error.message}`);
-      setLoading(false); // Garante que o loading para em caso de erro.
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900">
-      <div className="p-8 bg-gray-800 rounded-lg shadow-xl w-full max-w-md border border-gray-700">
-        <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-100">
-            Entrar
-        </h1>
-        <form onSubmit={handleSignIn}>
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-gray-300 text-sm font-semibold mb-2">Email:</label>
-            <input
-              type="email"
-              id="email"
-              className="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-200 bg-gray-700 border-gray-600 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="seu.email@exemplo.com"
-            />
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <Card className="w-full max-w-md shadow-2xl">
+        <CardHeader className="text-center">
+          <div className="flex justify-center items-center mb-4 h-16">
+            {logoUrl ? (
+                <img src={logoUrl} alt="Logo" className="h-full w-24" />
+            ) : (
+                <Globe className="w-12 h-12 text-primary" />
+            )}
           </div>
-          <div className="mb-6">
-            <label htmlFor="password" className="block text-gray-300 text-sm font-semibold mb-2">Senha:</label>
-            <input
-              type="password"
-              id="password"
-              className="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-200 bg-gray-700 border-gray-600 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="********"
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <button
-              type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:shadow-outline transform transition duration-300 hover:scale-105 disabled:bg-gray-500"
-              disabled={loading}
-            >
+          <CardTitle className="text-2xl">Bem-vindo de volta!</CardTitle>
+          <CardDescription>Faça login para acessar sua conta.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSignIn}>
+            <div className="grid w-full items-center gap-4">
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="seu.email@exemplo.com" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required 
+                />
+              </div>
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="password">Senha</Label>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  placeholder="********" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required 
+                />
+              </div>
+            </div>
+            {message && (
+              <p className="text-center text-sm mt-4 p-3 rounded-lg bg-destructive text-destructive-foreground">
+                {message}
+              </p>
+            )}
+            <Button type="submit" className="w-full mt-6" disabled={loading}>
               {loading ? 'Entrando...' : 'Entrar'}
-            </button>
-            <Link href="/auth/signup" className="inline-block align-baseline font-semibold text-sm text-blue-400 hover:text-blue-300 transition duration-200">
-              Criar conta
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="flex justify-center">
+          <p className="text-sm text-muted-foreground">
+            Não tem uma conta?{' '}
+            <Link href="/auth/signup" className="text-primary hover:underline">
+              Crie uma agora
             </Link>
-          </div>
-        </form>
-        {message && (
-          <p className="text-center text-sm mt-4 p-3 rounded-lg bg-red-900 text-red-200">
-            {message}
           </p>
-        )}
-      </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

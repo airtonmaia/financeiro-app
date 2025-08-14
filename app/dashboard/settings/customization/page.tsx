@@ -8,6 +8,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { Plus, Trash2, Tag, ArrowUp, ArrowDown, HandCoins, Palette } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 // --- TIPOS ---
 type Categoria = {
@@ -139,6 +140,128 @@ function StatusManager({ initialStatuses }: { initialStatuses: ProjectStatus[] }
     );
 }
 
+// --- Logo Manager ---
+function LogoManager() {
+    const supabase = createSupabaseBrowserClient();
+    const [logoUrl, setLogoUrl] = useState<string | null>(null);
+    const [uploading, setUploading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        const getUserAndProfile = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                setUser(user);
+                const { data: profile } = await supabase.from('profiles').select('logo_url').eq('id', user.id).single();
+                if (profile && profile.logo_url) {
+                    setLogoUrl(profile.logo_url);
+                }
+            }
+        };
+        getUserAndProfile();
+    }, [supabase]);
+
+    const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        setError(null);
+        if (!event.target.files || event.target.files.length === 0) {
+            return;
+        }
+
+        const file = event.target.files[0];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        setUploading(true);
+
+        const { error: uploadError } = await supabase.storage
+            .from('logos')
+            .upload(filePath, file, { upsert: true });
+
+        if (uploadError) {
+            setError(uploadError.message);
+            setUploading(false);
+            return;
+        }
+
+        const { data: { publicUrl } } = supabase.storage.from('logos').getPublicUrl(filePath);
+
+        if (publicUrl) {
+            const { error: dbError } = await supabase
+                .from('profiles')
+                .upsert({ id: user.id, logo_url: publicUrl, updated_at: new Date() });
+
+            if (dbError) {
+                setError(dbError.message);
+            } else {
+                setLogoUrl(publicUrl);
+            }
+        }
+        setUploading(false);
+    };
+
+    // Função para remover a logo
+    const handleRemoveLogo = async () => {
+        setError(null);
+        if (!logoUrl || !user) return;
+        setUploading(true);
+        try {
+            // Extrai o nome do arquivo do logoUrl
+            const urlParts = logoUrl.split('/');
+            const fileName = urlParts[urlParts.length - 1].split('?')[0];
+            // Remove do bucket
+            const { error: removeError } = await supabase.storage.from('logos').remove([fileName]);
+            if (removeError) {
+                setError('Erro ao remover logo do bucket: ' + removeError.message);
+                setUploading(false);
+                return;
+            }
+            // Limpa o campo no banco
+            const { error: dbError } = await supabase.from('profiles').update({ logo_url: null, updated_at: new Date() }).eq('id', user.id);
+            if (dbError) {
+                setError('Erro ao atualizar perfil: ' + dbError.message);
+            } else {
+                setLogoUrl(null);
+            }
+        } catch (e: any) {
+            setError('Erro inesperado ao remover logo.');
+        }
+        setUploading(false);
+    };
+
+    return (
+        <div className="bg-card p-6 rounded-xl shadow-card">
+            <h3 className="font-bold text-foreground mb-4 flex items-center gap-2"><Palette className="w-5 h-5" /> Logo da Empresa</h3>
+            <div className="flex flex-col items-center gap-4">
+                {logoUrl ? (
+                     <>
+                    <div className="w-32 h-32 rounded-full border-4 border-muted flex items-center justify-center">
+                    <img src={logoUrl} alt="Logo" className="w-20" />
+                    </div>
+                    </>
+                ) : (
+                    <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center">
+                        <Palette className="w-16 h-16 text-muted-foreground" />
+                    </div>
+                )}
+                <div className="w-full max-w-xs flex flex-col gap-2">
+                    <Label htmlFor="logo-upload" className="cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 w-full text-center rounded-md px-4 py-2 inline-block">
+                        {uploading ? 'Enviando...' : 'Trocar Logo'}
+                    </Label>
+                    <Input id="logo-upload" type="file" accept="image/*" onChange={handleUpload} disabled={uploading} className="hidden" />
+                    {logoUrl && (
+                        <Button type="button" variant="destructive" onClick={handleRemoveLogo} disabled={uploading} className="w-full">
+                            Remover Logo
+                        </Button>
+                    )}
+                </div>
+                {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+            </div>
+        </div>
+    );
+}
+
 // --- PÁGINA PRINCIPAL ---
 export default function CustomizationPage() {
     const [projectCategories, setProjectCategories] = useState<Categoria[]>([]);
@@ -175,13 +298,15 @@ export default function CustomizationPage() {
                     <h1 className="text-2xl font-bold">Personalização</h1>
                     <p className="text-sm text-muted-foreground">Gerencie as categorias e status usados em todo o sistema.</p>
                 </div>
-                 <Button><Plus className="w-4 h-4 mr-2" /> Nova Categoria</Button>
             </div>
 
             {loading ? (
                 <p className="text-center p-10 text-muted-foreground">A carregar...</p>
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="lg:col-span-2">
+                        <LogoManager />
+                    </div>
                     <div className="lg:col-span-2">
                         <StatusManager initialStatuses={projectStatuses} />
                     </div>

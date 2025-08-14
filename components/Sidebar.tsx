@@ -10,8 +10,10 @@ import {
 } from 'lucide-react';
 import {
     Sidebar, SidebarHeader, SidebarContent, SidebarFooter,
-    SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuSub, SidebarMenuSubItem, SidebarGroupLabel
+    SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuSub, SidebarMenuSubItem, SidebarGroupLabel,
+    SidebarSeparator
 } from '@/components/ui/sidebar';
+import { Separator } from "@/components/ui/separator"
 
 // --- TIPOS E DADOS ---
 type NavItem = {
@@ -92,23 +94,37 @@ export default function NewSidebar() {
     const pathname = usePathname();
     const supabase = createSupabaseBrowserClient();
     const [boards, setBoards] = React.useState<Quadro[]>([]);
+    const [logoUrl, setLogoUrl] = React.useState<string | null>(null);
 
     React.useEffect(() => {
-        const fetchBoards = async () => {
-            const { data } = await supabase.from('quadros').select('id, nome, cor');
-            if (data) {
-                setBoards(data as Quadro[]);
+        const fetchBoardsAndLogo = async () => {
+            const { data: boardsData } = await supabase.from('quadros').select('id, nome, cor');
+            if (boardsData) {
+                setBoards(boardsData as Quadro[]);
+            }
+
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data: profile } = await supabase.from('profiles').select('logo_url').eq('id', user.id).single();
+                if (profile && profile.logo_url) {
+                    setLogoUrl(profile.logo_url);
+                }
             }
         };
-        fetchBoards();
+        fetchBoardsAndLogo();
     }, [supabase]);
 
     return (
         <Sidebar className="p-2 bg-sidebar">
             <SidebarHeader>
-                <Link href="/dashboard" className="flex items-center justify-center lg:justify-start">
-                    <span className="ml-1 mb-3 text-xl font-bold text-violet-700 dark:text-light-text">Agência 360</span>
+                <Link href="/dashboard" className="flex items-center justify-center lg:justify-start ">
+                    {logoUrl ? (
+                        <img src={logoUrl} alt="Logo" className="h-full w-24" />
+                    ) : (
+                        <span className="ml-1 text-xl font-bold text-violet-700 dark:text-light-text">Agência 360</span>
+                    )}
                 </Link>
+                <Separator className="my-4" />
             </SidebarHeader>
             <SidebarContent>
                 <SidebarGroupLabel>Menu</SidebarGroupLabel>
