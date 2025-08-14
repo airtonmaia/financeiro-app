@@ -17,6 +17,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { type Client } from '@/types'; // Assuming Client type is defined here
+import { AddClientSheet } from '@/components/AddClientSheet'; // Import AddClientSheet
+import { Plus } from 'lucide-react'; // Import Plus icon
 
 // For Combobox (Client selection) - will need to implement this
 // For File input (Invoice file) - will need to implement this
@@ -37,8 +39,9 @@ export function InvoiceFormSheet({ isOpen, onClose, onSave, invoiceToEdit }: Inv
   const [isIssued, setIsIssued] = useState(false); // Corresponds to Status de emissão
   const [value, setValue] = useState<number | ''>('');
   const [serviceType, setServiceType] = useState('');
-      const [invoiceFile, setInvoiceFile] = useState<File | null>(null); // For file upload
-      const [isRecurring, setIsRecurring] = useState(false); // New state for recurrence
+  const [invoiceFile, setInvoiceFile] = useState<File | null>(null); // For file upload
+  const [isRecurring, setIsRecurring] = useState(false); // New state for recurrence
+  const [isAddClientSheetOpen, setIsAddClientSheetOpen] = useState(false); // New state for AddClientSheet
 
   const serviceTypes = [
     'Hospedagem',
@@ -179,18 +182,23 @@ export function InvoiceFormSheet({ isOpen, onClose, onSave, invoiceToEdit }: Inv
           {/* Client Combobox (TODO: Implement Shadcn Combobox) */}
           <div>
             <Label htmlFor="client">Cliente</Label>
-            <Select value={selectedClient} onValueChange={setSelectedClient}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione um cliente" />
-              </SelectTrigger>
-              <SelectContent>
-                {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>
-                    {client.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2"> {/* Add a flex container */}
+              <Select value={selectedClient} onValueChange={setSelectedClient}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione um cliente" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button type="button" variant="outline" size="icon" onClick={() => setIsAddClientSheetOpen(true)}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Data de emissão */}
@@ -250,6 +258,14 @@ export function InvoiceFormSheet({ isOpen, onClose, onSave, invoiceToEdit }: Inv
           </Button>
         </form>
       </SheetContent>
+      <AddClientSheet
+        isOpen={isAddClientSheetOpen}
+        onOpenChange={setIsAddClientSheetOpen} // Use onOpenChange to control sheet visibility
+        onSuccess={() => {
+          fetchClients(); // Re-fetch clients after a new one is added
+          setIsAddClientSheetOpen(false); // Close the AddClientSheet
+        }}
+      />
     </Sheet>
   );
 }

@@ -1,4 +1,3 @@
-
 // components/AddClientSheet.tsx
 'use client';
 
@@ -53,14 +52,16 @@ export function AddClientSheet({ isOpen, onOpenChange, clientToEdit, onSuccess }
 
   // Efeito para popular o formulário quando um cliente é passado para edição
   useEffect(() => {
-    if (isEditMode) {
-      // Garante que apenas os campos relevantes para o Client sejam usados
-      const { id, created_at, ...rest } = clientToEdit;
-      setClientData(rest);
-    } else {
-      setClientData(initialState);
+    if (isOpen) {
+      if (isEditMode) {
+        // Garante que apenas os campos relevantes para o Client sejam usados
+        const { id, created_at, ...rest } = clientToEdit;
+        setClientData(rest);
+      } else {
+        setClientData(initialState);
+      }
     }
-  }, [clientToEdit, isEditMode]);
+  }, [isOpen, clientToEdit, isEditMode]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
