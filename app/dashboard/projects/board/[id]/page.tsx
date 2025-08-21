@@ -171,6 +171,15 @@ function ProjectForm({ boardId, project, statuses, onSave, onCancel }: { boardId
     const [assinatura, setAssinatura] = useState(project?.assinatura || false);
     const [data_pagamento, setDataPagamento] = useState('');
 
+    // 50/50
+    const [parcela1_valor, setParcela1Valor] = useState<number | ''>(project?.detalhes_pagamento?.parcelas?.[0]?.valor || '');
+    const [parcela1_data, setParcela1Data] = useState(project?.detalhes_pagamento?.parcelas?.[0]?.data || '');
+    const [parcela2_data, setParcela2Data] = useState(project?.detalhes_pagamento?.parcelas?.[1]?.data || '');
+
+    // Parcelado
+    const [numero_parcelas, setNumeroParcelas] = useState<number | ''>(project?.detalhes_pagamento?.parcelas?.length || 2);
+    const [data_primeira_parcela, setDataPrimeiraParcela] = useState(project?.detalhes_pagamento?.parcelas?.[0]?.data || '');
+
     const [loading, setLoading] = useState(false);
     const [isClientModalOpen, setIsClientModalOpen] = useState(false);
 
@@ -200,11 +209,41 @@ function ProjectForm({ boardId, project, statuses, onSave, onCancel }: { boardId
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
+        const parcelas = [];
+        if (forma_pagamento === 'À Vista' && valor_total) {
+            parcelas.push({ valor: valor_total, data: data_pagamento, pago: entrada_recebida });
+        } else if (forma_pagamento === '50/50' && parcela1_valor && valor_total) {
+            parcelas.push({ valor: parcela1_valor, data: parcela1_data, pago: entrada_recebida });
+            parcelas.push({ valor: Number(valor_total) - Number(parcela1_valor), data: parcela2_data, pago: false });
+        } else if (forma_pagamento === 'Parcelado' && numero_parcelas && valor_total && data_primeira_parcela) {
+            const valorParcela = Number(valor_total) / Number(numero_parcelas);
+            for (let i = 0; i < Number(numero_parcelas); i++) {
+                const dataParcela = new Date(data_primeira_parcela);
+                dataParcela.setMonth(dataParcela.getMonth() + i);
+                parcelas.push({ valor: valorParcela, data: dataParcela.toISOString().split('T')[0], pago: i === 0 ? entrada_recebida : false });
+            }
+        }
+
+        const detalhes_pagamento = {
+            tipo: forma_pagamento,
+            parcelas: parcelas,
+        };
+
+        const status_pagamento = entrada_recebida ? (parcelas.every(p => p.pago) ? 'Totalmente pago' : 'Parcialmente pago') : 'Pendente';
+
         const projectData = {
-            descricao: nome_projeto, cliente_id: cliente_id || null, tipo_projeto, data_entrega,
-            status_entrega, observacao: descricao, prioridade, responsaveis, valor_total: integrar_financeiro ? Number(valor_total) : null,
-            assinatura, detalhes_pagamento: integrar_financeiro ? { tipo: forma_pagamento, parcelas: [] } : null,
-            status_pagamento: integrar_financeiro ? (entrada_recebida ? 'Parcialmente pago' : 'Pendente') : null,
+            descricao: nome_projeto, 
+            cliente_id: cliente_id || null, 
+            tipo_projeto, 
+            data_entrega,
+            status_entrega, 
+            observacao: descricao, 
+            prioridade, 
+            responsaveis, 
+            valor_total: integrar_financeiro ? Number(valor_total) : null,
+            assinatura, 
+            detalhes_pagamento: integrar_financeiro ? detalhes_pagamento : null,
+            status_pagamento: integrar_financeiro ? status_pagamento : null,
         };
 
         let projectId = project?.id;
@@ -216,12 +255,19 @@ function ProjectForm({ boardId, project, statuses, onSave, onCancel }: { boardId
         }
 
         if (projectId && integrar_financeiro && valor_total) {
-            const transactionData = {
-                user_id: user.id, descricao: `Receita do projeto: ${nome_projeto}`, valor: Number(valor_total), tipo: 'Receita' as const,
-                data: data_pagamento || new Date().toISOString().split('T')[0], status: entrada_recebida ? 'Pago' as const : 'Pendente' as const,
-                categoria: 'Venda de Projeto', projeto_id: projectId, cliente_id: cliente_id || null,
-            };
             await supabase.from('transacoes').delete().eq('projeto_id', projectId);
+            
+            const transactionData = {
+                user_id: user.id, 
+                descricao: `Receita do projeto: ${nome_projeto}`,
+                valor: Number(valor_total), 
+                tipo: 'Receita' as const,
+                data: data_pagamento || new Date().toISOString().split('T')[0], 
+                status: entrada_recebida ? 'Pago' as const : 'Pendente' as const,
+                categoria: 'Venda de Projeto', 
+                projeto_id: projectId, 
+                cliente_id: cliente_id || null,
+            };
             await supabase.from('transacoes').insert(transactionData);
         }
         onSave();
@@ -324,10 +370,40 @@ function ProjectForm({ boardId, project, statuses, onSave, onCancel }: { boardId
                                     </Select>
                                 </div>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">Data do pagamento</label>
-                                <Input type="date" value={data_pagamento} onChange={(e) => setDataPagamento(e.target.value)} />
-                            </div>
+                            {forma_pagamento === 'À Vista' && (
+                                <div>
+                                    <label className="block text-sm font-medium text-muted-foreground mb-1">Data do Pagamento*</label>
+                                    <Input type="date" value={data_pagamento} onChange={(e) => setDataPagamento(e.target.value)} required />
+                                </div>
+                            )}
+                            {forma_pagamento === '50/50' && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-muted-foreground mb-1">Valor da 1ª Parcela (50%)*</label>
+                                        <Input type="number" value={parcela1_valor} onChange={(e) => setParcela1Valor(Number(e.target.value))} required />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-muted-foreground mb-1">Data da 1ª Parcela*</label>
+                                        <Input type="date" value={parcela1_data} onChange={(e) => setParcela1Data(e.target.value)} required />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-muted-foreground mb-1">Data Prevista da 2ª Parcela*</label>
+                                        <Input type="date" value={parcela2_data} onChange={(e) => setParcela2Data(e.target.value)} required />
+                                    </div>
+                                </div>
+                            )}
+                            {forma_pagamento === 'Parcelado' && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-muted-foreground mb-1">Número de Parcelas*</label>
+                                        <Input type="number" value={numero_parcelas} onChange={(e) => setNumeroParcelas(Number(e.target.value))} required min="2" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-muted-foreground mb-1">Data da 1ª Parcela*</label>
+                                        <Input type="date" value={data_primeira_parcela} onChange={(e) => setDataPrimeiraParcela(e.target.value)} required />
+                                    </div>
+                                </div>
+                            )}
                             <div className="flex items-center justify-between">
                                 <label className="text-sm">Você recebeu a entrada?</label>
                                 <button type="button" onClick={() => setEntradaRecebida(!entrada_recebida)} className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${entrada_recebida ? 'bg-primary' : 'bg-muted'}`}>
