@@ -6,7 +6,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
-import { type Client, type Project } from '@/types'; 
+import { type Client, type Project } from '@/types';
+import { Editor } from '@/components/blocks/editor-00/editor';
+import { JSONContent } from 'novel';
 
 export default function EditProjectPage() {
     const router = useRouter();
@@ -23,7 +25,7 @@ export default function EditProjectPage() {
     const [tipo_projeto, setTipoProjeto] = useState('');
     const [data_entrega, setDataEntrega] = useState('');
     const [status_entrega, setStatusEntrega] = useState('A fazer');
-    const [descricao, setDescricao] = useState('');
+    const [descricao, setDescricao] = useState<JSONContent | null>(null);
 
     // Dados Financeiros
     const [valor_total, setValorTotal] = useState<number | ''>('');
@@ -65,12 +67,16 @@ export default function EditProjectPage() {
 
         // Preenche o formulário com os dados existentes
         if (projectData) {
-            setNomeProjeto(projectData.descricao || '');
+            setNomeProjeto(projectData.nome_projeto || '');
             setClienteId(projectData.cliente_id || '');
             setTipoProjeto(projectData.tipo_projeto || '');
             setDataEntrega(projectData.data_entrega || '');
             setStatusEntrega(projectData.status_entrega || 'A fazer');
-            setDescricao(projectData.observacao || '');
+            try {
+                setDescricao(JSON.parse(projectData.observacao || ''));
+            } catch (e) {
+                setDescricao(null);
+            }
             setValorTotal(projectData.valor_total || '');
             setAssinatura(projectData.assinatura || false);
             
@@ -108,12 +114,12 @@ export default function EditProjectPage() {
         const { error: updateError } = await supabase
             .from('projetos')
             .update({
-                descricao: nome_projeto,
+                nome_projeto,
                 cliente_id,
                 tipo_projeto,
                 data_entrega,
                 status_entrega,
-                observacao: descricao,
+                observacao: JSON.stringify(descricao),
                 valor_total,
                 assinatura,
                 detalhes_pagamento,
@@ -159,7 +165,10 @@ export default function EditProjectPage() {
                         </div>
                         <div>
                             <label htmlFor="descricao" className="block text-sm font-medium text-gray-text mb-1">Descrição do Projeto</label>
-                            <textarea id="descricao" value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={4} className="w-full p-3 bg-gray-50 border border-light-tertiary rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green" />
+                            <Editor
+                                initialContent={descricao}
+                                onChange={setDescricao}
+                            />
                         </div>
                     </div>
 

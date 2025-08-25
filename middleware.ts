@@ -46,6 +46,12 @@ export async function middleware(request: NextRequest) {
     console.log('[Middleware] Nenhum utilizador encontrado.');
   }
 
+  // A rota /public/board é acessível sem autenticação
+  if (request.nextUrl.pathname.startsWith('/public/board')) {
+    console.log('[Middleware] Permitindo acesso à visualização pública do quadro...');
+    return response;
+  }
+
   // Se o usuário não estiver logado e tentar acessar uma rota protegida
   if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
     console.log('[Middleware] Acesso negado ao dashboard. Redirecionando para /auth/login...');

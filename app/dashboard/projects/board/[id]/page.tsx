@@ -3,10 +3,11 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { type Project, type Subtask, type ProjectStatus, type Client, type Categoria, type Quadro, type TaskGroup } from '@/types';
+import { Editor } from "@/components/editor";
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import SlideOverPanel from '@/components/ui/SlideOverPanel';
 import { 
@@ -24,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ShareDialog } from "@/components/ui/share-dialog";
 
 import ProjectListPage from '@/app/dashboard/projects/board/[id]/page-list';
 
@@ -37,7 +39,7 @@ const formatBRL = (value: number) => {
 
 // --- COMPONENTES ---
 
-function ProjectCard({ project, onOpen, onEdit, onMove, onDelete }: { project: Project & { task_groups: TaskGroup[] }; onOpen: () => void; onEdit: () => void; onMove: () => void; onDelete: () => void; }) {
+function ProjectCard({ project, onOpen, onEdit, onMove, onDelete, statuses }: { project: Project & { task_groups: TaskGroup[] }; onOpen: () => void; onEdit: () => void; onMove: () => void; onDelete: () => void; statuses: ProjectStatus[]; }) {
     const diasRestantes = project.data_entrega ? Math.ceil((new Date(project.data_entrega).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
     
     const priorityClasses: { [key: string]: string } = {
@@ -48,7 +50,13 @@ function ProjectCard({ project, onOpen, onEdit, onMove, onDelete }: { project: P
     
     const dateColorClass = diasRestantes !== null && diasRestantes < 7 ? 'text-destructive' : 'text-muted-foreground';
 
+    const isCompleted = statuses.some(s => s.name === project.status_entrega && s.is_final_status);
+
     const renderDueDate = () => {
+        // This line is now redundant if I handle it outside.
+        // But it's good to keep it for consistency if renderDueDate is used elsewhere.
+        if (isCompleted) return null; 
+
         if (diasRestantes === null) return null;
         if (diasRestantes < 0) return <span className="text-destructive">Atrasado</span>;
         if (diasRestantes === 0) return <span className="text-destructive">Entrega hoje</span>;
@@ -84,10 +92,17 @@ function ProjectCard({ project, onOpen, onEdit, onMove, onDelete }: { project: P
             <h4 className="font-bold text-foreground">{project.descricao}</h4>
             
             <div className="flex justify-between items-center pt-2 border-t border-border">
-                 <div className={`flex items-center gap-1 text-xs font-semibold ${dateColorClass}`}>
-                    <Clock className="w-3 h-3" />
-                    <span>{renderDueDate()}</span>
-                </div>
+                 {isCompleted ? (
+                    <div className="flex items-center gap-1 text-xs font-semibold text-success">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>Concluído</span>
+                    </div>
+                 ) : (
+                    <div className={`flex items-center gap-1 text-xs font-semibold ${dateColorClass}`}>
+                        <Clock className="w-3 h-3" />
+                        <span>{renderDueDate()}</span>
+                    </div>
+                 )}
                 <div className="flex -space-x-2">
                     <Avatar className="rounded-full size-6">
                         <AvatarImage src="/avatar.png" />
@@ -150,7 +165,7 @@ function QuickClientModal({ isOpen, onClose, onClientCreated }: { isOpen: boolea
     );
 }
 
-function ProjectForm({ boardId, project, statuses, onSave, onCancel }: { boardId: string; project: Partial<Project> | null; statuses: ProjectStatus[]; onSave: () => void; onCancel: () => void; }) {
+const ProjectForm = React.memo(function ProjectForm({ boardId, project, statuses, onSave, onCancel }: { boardId: string; project: Partial<Project> | null; statuses: ProjectStatus[]; onSave: () => void; onCancel: () => void; }) {
     const supabase = createSupabaseBrowserClient();
     const [clients, setClients] = useState<Client[]>([]);
     const [projectCategories, setProjectCategories] = useState<Categoria[]>([]);
@@ -339,7 +354,13 @@ function ProjectForm({ boardId, project, statuses, onSave, onCancel }: { boardId
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-muted-foreground mb-1">Descrição</label>
-                            <Textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={3} />
+                            {typeof window !== 'undefined' && (
+                                <Editor
+                                    value={descricao}
+                                    onChange={(value: string) => setDescricao(value)}
+                                    placeholder="Descreva os detalhes do projeto..."
+                                />
+                            )}
                         </div>
                     </div>
 
@@ -427,7 +448,7 @@ function ProjectForm({ boardId, project, statuses, onSave, onCancel }: { boardId
             <QuickClientModal isOpen={isClientModalOpen} onClose={() => setIsClientModalOpen(false)} onClientCreated={handleClientCreated} />
         </>
     );
-}
+});
 
 function TaskGroupComponent({ group, onUpdate }: { group: TaskGroup; onUpdate: () => void; }) {
     const supabase = createSupabaseBrowserClient();
@@ -548,7 +569,7 @@ function TaskSection({ project, onUpdate }: { project: Project & { task_groups: 
     );
 }
 
-function ProjectDetailView({ project, onUpdate }: { project: Project & { task_groups: TaskGroup[] }; onUpdate: () => void; }) {
+const ProjectDetailView = React.memo(function ProjectDetailView({ project, onUpdate, onEdit }: { project: Project & { task_groups: TaskGroup[] }; onUpdate: () => void; onEdit: (id: string) => void; }) {
     const [activeTab, setActiveTab] = useState('tasks');
 
     const allSubtasks = project.task_groups.flatMap(g => g.subtarefas);
@@ -592,9 +613,20 @@ function ProjectDetailView({ project, onUpdate }: { project: Project & { task_gr
                             </tr>
                         </tbody>
                     </table>
-                    <div className="border border-primary/20 bg-primary/10 p-6 rounded-md">
-                        <label className="text-md font-semibold text-foreground">Descrição</label>
-                        <p className="text-sm text-muted-foreground mt-1">{project.observacao || 'Nenhuma descrição fornecida.'}</p>
+                    <div className="border border-primary/20 bg-primary/10 p-6 rounded-md relative group">
+                        <div className="flex justify-between items-center mb-2">
+                            <label className="text-md font-semibold text-foreground">Descrição</label>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onEdit(project.id)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Editar
+                            </Button>
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1" dangerouslySetInnerHTML={{ __html: project.observacao || 'Nenhuma descrição fornecida.' }} />
                     </div>
                 </div>
             </div>
@@ -616,7 +648,7 @@ function ProjectDetailView({ project, onUpdate }: { project: Project & { task_gr
             </div>
         </div>
     );
-}
+});
 
 function StatusManagerModal({ isOpen, onClose, onSave, statusToEdit, boardId }: { isOpen: boolean; onClose: () => void; onSave: () => void; statusToEdit: ProjectStatus | null; boardId: string; }) {
     const supabase = createSupabaseBrowserClient();
@@ -750,6 +782,7 @@ export default function BoardPage() {
     const [statuses, setStatuses] = useState<ProjectStatus[]>([]);
     const [boardName, setBoardName] = useState('');
     const [boardDescription, setBoardDescription] = useState('');
+    const [boardIsPublic, setBoardIsPublic] = useState(false);
     const [loading, setLoading] = useState(true);
     const supabase = createSupabaseBrowserClient();
     
@@ -761,10 +794,21 @@ export default function BoardPage() {
     const fetchData = useCallback(async () => {
         if (!boardId) return;
         setLoading(true);
-        const { data: boardData } = await supabase.from('quadros').select('nome, descricao').eq('id', boardId).single();
+        console.log('Buscando dados do quadro:', boardId);
+        const { data: boardData, error } = await supabase.from('quadros').select('nome, descricao, is_public').eq('id', boardId).single();
+        
+        console.log('Resposta do Supabase:', { boardData, error });
+        
+        if (error) {
+            console.error('Erro ao buscar dados do quadro:', error);
+        }
+        
         if (boardData) {
+            console.log('Dados do quadro:', boardData);
             setBoardName(boardData.nome);
             setBoardDescription(boardData.descricao || '');
+            setBoardIsPublic(boardData.is_public || false);
+            console.log('Status público:', boardData.is_public);
         }
 
         const { data: statusesData } = await supabase.from('project_statuses').select('*').eq('quadro_id', boardId).order('display_order');
@@ -811,7 +855,33 @@ export default function BoardPage() {
             return;
         }
 
-        setProjects(prev => prev.map(p => p.id === draggableId ? { ...p, status_entrega: destination.droppableId } : p));
+        setProjects(prevProjects => {
+            const projectsByStatus: { [key: string]: (Project & { task_groups: TaskGroup[] })[] } = {};
+            statuses.forEach(status => {
+                projectsByStatus[status.name] = prevProjects.filter(p => p.status_entrega === status.name);
+            });
+
+            const sourceList = projectsByStatus[source.droppableId];
+            if (!sourceList) return prevProjects;
+            
+            const [movedItem] = sourceList.splice(source.index, 1);
+            if (!movedItem) return prevProjects;
+
+            movedItem.status_entrega = destination.droppableId;
+
+            const destList = projectsByStatus[destination.droppableId];
+            if (!destList) return prevProjects; // Should not happen as statuses are pre-populated
+
+            destList.splice(destination.index, 0, movedItem);
+
+            const newProjectsFlat: (Project & { task_groups: TaskGroup[] })[] = [];
+            statuses.forEach(status => {
+                newProjectsFlat.push(...projectsByStatus[status.name]);
+            });
+
+            return newProjectsFlat;
+        });
+
         await supabase.from('projetos').update({ status_entrega: destination.droppableId }).eq('id', draggableId);
     };
 
@@ -866,7 +936,12 @@ export default function BoardPage() {
         }
     };
     
-    const selectedProject = projects.find(p => p.id === currentProjectId);
+    const selectedProject = useMemo(() => {
+        if (typeof currentProjectId !== 'string' || !currentProjectId) {
+            return undefined; // Ensure currentProjectId is a valid string
+        }
+        return projects.find(p => p.id === currentProjectId);
+    }, [projects, currentProjectId]);
 
     return (
         <div className="flex w-full h-[calc(100vh_-_theme(space.24))]">
@@ -877,6 +952,11 @@ export default function BoardPage() {
                         <p className="text-sm text-muted-foreground">{boardDescription || 'Visualize e gerencie os projetos deste quadro.'}</p>
                     </div>
                     <div className="flex items-center gap-2">
+                        <ShareDialog 
+                            boardId={boardId} 
+                            isPublic={boardIsPublic}
+                            onVisibilityChange={(isPublic) => setBoardIsPublic(isPublic)} 
+                        />
                         <Button variant={displayMode === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => handleViewChange('list')}><List className="w-5 h-5" /></Button>
                         <Button variant={displayMode === 'kanban' ? 'secondary' : 'ghost'} size="icon" onClick={() => handleViewChange('kanban')}><LayoutGrid className="w-5 h-5" /></Button>
                         <Button onClick={() => handleOpenPanel('new')}><Plus className="w-4 h-4 mr-2" /> Novo Projeto</Button>
@@ -920,7 +1000,7 @@ export default function BoardPage() {
                                                                             <Draggable key={p.id} draggableId={p.id} index={i}>
                                                                                 {(providedCard) => (
                                                                                     <div ref={providedCard.innerRef} {...providedCard.draggableProps} {...providedCard.dragHandleProps}>
-                                                                                        <ProjectCard project={p} onOpen={() => handleOpenPanel('details', p.id)} onEdit={() => handleOpenPanel('edit', p.id)} onMove={() => handleOpenMoveModal(p)} onDelete={() => handleDeleteProject(p.id)} />
+                                                                                        <ProjectCard project={p} onOpen={() => handleOpenPanel('details', p.id)} onEdit={() => handleOpenPanel('edit', p.id)} onMove={() => handleOpenMoveModal(p)} onDelete={() => handleDeleteProject(p.id)} statuses={statuses} />
                                                                                     </div>
                                                                                 )}
                                                                             </Draggable>
@@ -950,7 +1030,7 @@ export default function BoardPage() {
             </div>
            <SlideOverPanel isOpen={!!viewMode} onClose={handleClosePanel} title={viewMode === 'new' ? 'Novo Projeto' : viewMode === 'edit' ? 'Editar Projeto' : selectedProject?.descricao ?? ''}>
               {(viewMode === 'new' || viewMode === 'edit') && <ProjectForm boardId={boardId} project={selectedProject || null} statuses={statuses} onSave={fetchData} onCancel={handleClosePanel} />}
-              {viewMode === 'details' && selectedProject && <ProjectDetailView project={selectedProject as Project & { task_groups: TaskGroup[] }} onUpdate={fetchData} />}
+              {viewMode === 'details' && selectedProject && <ProjectDetailView project={selectedProject as Project & { task_groups: TaskGroup[] }} onUpdate={fetchData} onEdit={(id) => handleOpenPanel('edit', id)} />}
             </SlideOverPanel>
 
             <StatusManagerModal isOpen={isStatusModalOpen} onClose={() => setIsStatusModalOpen(false)} onSave={() => { setIsStatusModalOpen(false); fetchData(); }} statusToEdit={statusToEdit} boardId={boardId} />

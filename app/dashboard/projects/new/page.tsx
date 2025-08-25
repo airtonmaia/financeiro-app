@@ -6,7 +6,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
-import { type Client } from '@/types'; 
+import { type Client } from '@/types';
+import { Editor } from '@/components/blocks/editor-00/editor';
+import { JSONContent } from 'novel';
 
 // Definindo o tipo para as categorias aqui para simplicidade
 type Categoria = { id: string; nome: string; tipo: string; };
@@ -24,7 +26,7 @@ export default function NewProjectPage() {
     const [tipo_projeto, setTipoProjeto] = useState('');
     const [data_entrega, setDataEntrega] = useState('');
     const [status_entrega, setStatusEntrega] = useState('A fazer');
-    const [descricao, setDescricao] = useState('');
+    const [descricao, setDescricao] = useState<JSONContent | null>(null);
     const [valor_total, setValorTotal] = useState<number | ''>('');
     const [forma_pagamento, setFormaPagamento] = useState('À Vista');
     const [entrada_recebida, setEntradaRecebida] = useState(false);
@@ -92,8 +94,8 @@ export default function NewProjectPage() {
             .insert({
                 user_id: user.id,
                 cliente_id,
-                descricao: nome_projeto,
-                observacao: descricao,
+                nome_projeto,
+                observacao: JSON.stringify(descricao),
                 data_entrega,
                 status_entrega,
                 valor_total,
@@ -156,7 +158,10 @@ export default function NewProjectPage() {
                         </div>
                         <div>
                             <label htmlFor="descricao" className="block text-sm font-medium text-gray-text mb-1">Descrição do Projeto</label>
-                            <textarea id="descricao" value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={4} className="w-full p-3 bg-gray-50 border border-light-tertiary rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green" />
+                            <Editor
+                                initialContent={null}
+                                onChange={setDescricao}
+                            />
                         </div>
                     </div>
 

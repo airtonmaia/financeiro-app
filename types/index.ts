@@ -1,6 +1,16 @@
 // types/index.ts
 // Ficheiro central para armazenar os tipos de dados da aplicação.
 
+export type Status = {
+  id: string;
+  name: string;
+  color: string;
+  display_order: number;
+  quadro_id: string;
+  user_id: string;
+  is_final_status?: boolean;
+};
+
 export type Client = {
   id: string;
   created_at: string;
@@ -23,8 +33,11 @@ export type Parcela = {
 export type TaskGroup = {
   id: string;
   projeto_id: string;
+  user_id: string;
   nome: string;
+  status_id: string;
   subtarefas: Subtask[];
+  created_at?: string;
 };
 
 export type Subtask = {
@@ -39,27 +52,29 @@ export type Subtask = {
 export type Project = {
   id: string;
   created_at: string;
-  cliente_id: string;
-  descricao: string; 
-  observacao: string | null;
-  data_entrega: string;
-  status_entrega: string;
-  valor_total: number;
+  user_id: string;
+  quadro_id: string;
+  prioridade?: 'Baixa' | 'Média' | 'Alta' | null;
+  responsaveis?: string | null;
+  cliente_id?: string;
+  descricao: string;
+  data_entrega?: string | null;
+  observacao?: string | null;
+  status_entrega?: string;
+  status_pagamento: string;
+  valor_pago?: number;
+  valor_total?: number;
   assinatura: boolean;
-  tipo_projeto: string | null;
-  detalhes_pagamento: {
+  tipo_projeto?: string | null;
+  anotacoes?: string | null;
+  detalhes_pagamento?: {
     tipo: 'À Vista' | '50/50' | 'Parcelado';
     parcelas: Parcela[];
   } | null;
-  status_pagamento: string;
-  anotacoes?: string | null;
-  clientes: { 
+  clientes?: { 
     nome: string;
   } | null;
-  quadro_id?: string;
-  prioridade?: 'Baixa' | 'Média' | 'Alta' | null;
-  responsaveis?: string | null;
-  task_groups: TaskGroup[]; // MODIFICADO: Usa a nova estrutura
+  task_groups?: TaskGroup[]; // MODIFICADO: Usa a nova estrutura
 };
 
 export type Transacao = {
