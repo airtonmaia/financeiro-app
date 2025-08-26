@@ -27,6 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ShareDialog } from "@/components/ui/share-dialog";
+import { updateProjectStatus } from '@/app/actions/update-project-status';
 
 import ProjectListPage from '@/app/dashboard/projects/board/[id]/page-list';
 
@@ -865,34 +866,25 @@ export default function BoardPage() {
             return;
         }
 
+        const originalProjects = projects;
         setProjects(prevProjects => {
-            const projectsByStatus: { [key: string]: (Project & { task_groups: TaskGroup[] })[] } = {};
-            statuses.forEach(status => {
-                projectsByStatus[status.name] = prevProjects.filter(p => p.status_entrega === status.name);
+            const newProjects = prevProjects.map(p => {
+                if (p.id === draggableId) {
+                    return { ...p, status_entrega: destination.droppableId };
+                }
+                return p;
             });
-
-            const sourceList = projectsByStatus[source.droppableId];
-            if (!sourceList) return prevProjects;
-            
-            const [movedItem] = sourceList.splice(source.index, 1);
-            if (!movedItem) return prevProjects;
-
-            movedItem.status_entrega = destination.droppableId;
-
-            const destList = projectsByStatus[destination.droppableId];
-            if (!destList) return prevProjects; // Should not happen as statuses are pre-populated
-
-            destList.splice(destination.index, 0, movedItem);
-
-            const newProjectsFlat: (Project & { task_groups: TaskGroup[] })[] = [];
-            statuses.forEach(status => {
-                newProjectsFlat.push(...projectsByStatus[status.name]);
-            });
-
-            return newProjectsFlat;
+            return newProjects;
         });
 
-        await supabase.from('projetos').update({ status_entrega: destination.droppableId }).eq('id', draggableId);
+        const { success, error } = await updateProjectStatus(draggableId, destination.droppableId, boardId);
+
+        if (!success) {
+            console.error("Failed to update project status:", error);
+            setProjects(originalProjects);
+        } else {
+            router.refresh();
+        }
     };
 
     const handleOpenMoveModal = (project: Project) => {

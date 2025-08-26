@@ -28,11 +28,11 @@ type Status = {
 type BoardProps = {
     projects: Project[];
     statuses: Status[];
-    onOpenProject: (id: string) => void;
-    onEditProject: (id: string) => void;
-    onMoveProject: (project: Project) => void;
-    onDeleteProject: (id: string) => void;
-    onDragEnd: (result: DropResult) => void;
+    onOpenProject?: (id: string) => void;
+    onEditProject?: (id: string) => void;
+    onMoveProject?: (project: Project) => void;
+    onDeleteProject?: (id: string) => void;
+    onDragEnd?: (result: DropResult) => void;
 };
 
 export function DragDropBoard({ 
@@ -42,14 +42,14 @@ export function DragDropBoard({
     onEditProject,
     onMoveProject,
     onDeleteProject,
-    onDragEnd
+    onDragEnd = () => { /* no-op */ }
 }: BoardProps) {
 
     return (
         <DragDropContext onDragEnd={onDragEnd}>
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {statuses.map((status) => (
-                    <Droppable key={status.id} droppableId={status.id}>
+                    <Droppable key={status.id} droppableId={status.name}>
                         {(provided) => (
                             <div
                                 {...provided.droppableProps}
@@ -79,20 +79,22 @@ export function DragDropBoard({
                                                             "p-4 space-y-2",
                                                             snapshot.isDragging && "ring-2 ring-primary"
                                                         )}
-                                                        onClick={() => onOpenProject(project.id)}
+                                                        onClick={() => onOpenProject?.(project.id)}
                                                     >
                                                         <div className="flex justify-between items-start">
                                                             <h4 className="font-medium">{project.descricao}</h4>
-                                                            <DropdownMenu>
-                                                                <DropdownMenuTrigger>
-                                                                    <button onClick={(e) => e.stopPropagation()} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground">⋯</button>
-                                                                </DropdownMenuTrigger>
-                                                                <DropdownMenuContent>
-                                                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEditProject(project.id); }}>Editar</DropdownMenuItem>
-                                                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onMoveProject(project); }}>Mover para...</DropdownMenuItem>
-                                                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDeleteProject(project.id); }} className="text-destructive">Excluir</DropdownMenuItem>
-                                                                </DropdownMenuContent>
-                                                            </DropdownMenu>
+                                                            {onEditProject && onMoveProject && onDeleteProject && (
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <button onClick={(e) => e.stopPropagation()} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground">⋯</button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent>
+                                                                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEditProject(project.id); }}>Editar</DropdownMenuItem>
+                                                                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onMoveProject(project); }}>Mover para...</DropdownMenuItem>
+                                                                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDeleteProject(project.id); }} className="text-destructive">Excluir</DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                            )}
                                                         </div>
                                                         {project.data_entrega && (
                                                             <div className="text-sm text-muted-foreground flex items-center gap-2">

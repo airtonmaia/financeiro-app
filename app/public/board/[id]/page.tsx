@@ -2,7 +2,7 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { DragDropBoard } from '@/components/DragDropBoard';
+import { PublicBoardClient } from './board-client';
 
 type Props = {
     params: {
@@ -45,7 +45,7 @@ export default async function PublicBoardPage({ params }: Props) {
             <div className="min-h-screen bg-background p-8">
                 <div className="max-w-7xl mx-auto space-y-6">
                     <h1 className="text-2xl font-bold">{boardData.nome}</h1>
-                    <DragDropBoard projects={projects} statuses={statusData} />
+                    <PublicBoardClient initialProjects={projects} initialStatuses={statusData} boardId={boardId} />
                 </div>
             </div>
         );
