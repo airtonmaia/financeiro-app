@@ -4,20 +4,13 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import { Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { type Project } from '@/types';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-type Project = {
-    id: string;
-    descricao: string;
-    data_entrega: string | null | undefined;
-    status_entrega: string;
-    task_groups?: any[];
-};
 
 type Status = {
     id: string;

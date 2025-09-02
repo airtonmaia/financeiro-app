@@ -805,28 +805,42 @@ export default function BoardPage() {
     const fetchData = useCallback(async () => {
         if (!boardId) return;
         setLoading(true);
-        console.log('Buscando dados do quadro:', boardId);
-        const { data: boardData, error } = await supabase.from('quadros').select('nome, descricao, is_public').eq('id', boardId).single();
+
+        const { data: boardData, error: boardError } = await supabase.from('quadros').select('nome, descricao, is_public').eq('id', boardId).single();
         
-        console.log('Resposta do Supabase:', { boardData, error });
-        
-        if (error) {
-            console.error('Erro ao buscar dados do quadro:', error);
+        if (boardError) {
+            console.error('Erro ao buscar dados do quadro:', boardError);
         }
         
         if (boardData) {
-            console.log('Dados do quadro:', boardData);
             setBoardName(boardData.nome);
             setBoardDescription(boardData.descricao || '');
             setBoardIsPublic(boardData.is_public || false);
-            console.log('Status público:', boardData.is_public);
         }
 
         const { data: statusesData } = await supabase.from('project_statuses').select('*').eq('quadro_id', boardId).order('display_order');
         if (statusesData) setStatuses(statusesData);
 
-        const { data: projectsData } = await supabase.from('projetos').select('*, clientes(nome), task_groups(*, subtarefas(*))').eq('quadro_id', boardId);
-        if (projectsData) setProjects(projectsData as any);
+        const { data: projectsData, error: projectsError } = await supabase.from('projetos').select('*, clientes(nome), task_groups(*, subtarefas(*))').eq('quadro_id', boardId);
+        
+        if (projectsError) {
+            console.error('Erro ao buscar projetos:', projectsError);
+        }
+
+        if (projectsData) {
+            const typedProjects = projectsData.map(p => {
+                const task_groups = p.task_groups || [];
+                const sanitizedTaskGroups = task_groups.map((tg: any) => ({
+                    ...tg,
+                    subtarefas: tg.subtarefas || []
+                }));
+                return {
+                    ...p,
+                    task_groups: sanitizedTaskGroups,
+                };
+            });
+            setProjects(typedProjects as (Project & { task_groups: TaskGroup[] })[]);
+        }
         setLoading(false);
     }, [boardId, supabase]);
 

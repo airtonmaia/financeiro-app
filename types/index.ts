@@ -91,6 +91,7 @@ export type Transacao = {
     frequencia?: string;
     projetos?: { descricao: string } | null;
     clientes?: { nome: string } | null;
+    isGenerated?: boolean;
 };
 
 export type Quadro = {

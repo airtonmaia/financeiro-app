@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
-import { Plus, Search, Download } from 'lucide-react'; // Adicionado Download
+import { Plus, Search, Download, MoreHorizontal, Eye, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,13 @@ import { InvoiceFormSheet } from '@/components/InvoiceFormSheet';
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Switch } from "@/components/ui/switch"; // Adicionado Switch
+import { Switch } from "@/components/ui/switch";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 type Invoice = {
   id: string;
@@ -20,11 +26,12 @@ type Invoice = {
   client_id: string;
   data_emissao: string;
   status_emissao: 'Emitido' | 'Pendente';
-  valor: number; // Corrigido para valor
+  valor: number;
   invoice_file_url: string | null;
-  tipo_servico: string; // Corrigido para tipo_servico
+  tipo_servico: string;
   created_at: string;
-  clients?: { nome: string }; // join de clients(nome)
+  clients?: { nome: string };
+  is_recurring?: boolean;
 };
 
 export default function InvoicesPage() {
@@ -35,10 +42,11 @@ export default function InvoicesPage() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(
-    () => new Date().toISOString().slice(0, 7) // YYYY-MM
+    () => new Date().toISOString().slice(0, 7)
   );
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [invoiceToEdit, setInvoiceToEdit] = useState<Invoice | null>(null);
 
   const fetchInvoices = useCallback(async () => {
     setLoading(true);
@@ -51,7 +59,6 @@ export default function InvoicesPage() {
       setError(`Erro ao carregar notas fiscais: ${error.message}`);
       console.error(error);
     } else {
-      console.log("Dados retornados do Supabase:", data); // Adicionado para depuração
       setInvoices((data ?? []) as Invoice[]);
       setError(null);
     }
@@ -69,7 +76,6 @@ export default function InvoicesPage() {
       console.error('Erro ao atualizar status:', error);
       alert(`Erro ao atualizar status: ${error.message}`);
     } else {
-      // Atualiza o estado local para refletir a mudança imediatamente
       setInvoices(prevInvoices =>
         prevInvoices.map(inv =>
           inv.id === invoiceId ? { ...inv, status_emissao: statusText } : inv
@@ -78,20 +84,30 @@ export default function InvoicesPage() {
     }
   }, [supabase]);
 
-  // Tipagem explícita para compatibilizar com BasicTable (accessor precisa ser keyof Invoice)
+  const handleEditInvoice = (invoice: Invoice) => {
+    setInvoiceToEdit(invoice);
+    setIsSheetOpen(true);
+  };
+
+  const handleDeleteInvoice = async (invoiceId: string) => {
+    if (window.confirm("Tem certeza que deseja excluir esta nota fiscal?")) {
+      const { error } = await supabase
+        .from('notas_fiscais')
+        .delete()
+        .eq('id', invoiceId);
+
+      if (error) {
+        alert(`Erro ao excluir nota fiscal: ${error.message}`);
+      } else {
+        fetchInvoices();
+      }
+    }
+  };
+
   const invoiceColumns: { header: string; accessor?: keyof Invoice; render?: (row: Invoice) => React.ReactNode }[] = [
     {
       header: "Cliente",
-      render: (row) => {
-        console.log("Row object in Cliente render:", row); // Debugging line
-        if (!row) {
-          return '-';
-        }
-        if (row.clients?.nome) {
-          return row.clients.nome;
-        }
-        return '-';
-      },
+      render: (row) => row.clients?.nome || '-',
     },
     {
       header: "Data de Emissão",
@@ -101,7 +117,6 @@ export default function InvoicesPage() {
         try {
           return format(new Date(row.data_emissao), 'dd/MM/yyyy', { locale: ptBR });
         } catch (e) {
-          console.error("Erro ao formatar data:", row.data_emissao, e);
           return String(row.data_emissao);
         }
       }
@@ -143,6 +158,26 @@ export default function InvoicesPage() {
       header: "Tipo de Serviço",
       accessor: "tipo_servico",
     },
+    {
+      header: "Ações",
+      render: (row) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="w-8 h-8">
+              <MoreHorizontal className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => handleEditInvoice(row)}>
+              <Eye className="w-4 h-4 mr-2" /> Ver / Editar
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleDeleteInvoice(row.id)} className="text-destructive focus:text-destructive">
+              <Trash2 className="w-4 h-4 mr-2" /> Excluir
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
   ];
 
   useEffect(() => {
@@ -150,10 +185,10 @@ export default function InvoicesPage() {
   }, [fetchInvoices]);
 
   const handleNewInvoice = () => {
+    setInvoiceToEdit(null);
     setIsSheetOpen(true);
   };
 
-  // Filtro simples por termo e mês
   const filteredInvoices = invoices.filter((invoice) => {
     const term = searchTerm.toLowerCase();
     const matchesSearch =
@@ -165,7 +200,6 @@ export default function InvoicesPage() {
     return matchesSearch && matchesMonth;
   });
 
-  // Cards (cálculos)
   const annualLimit = 81000;
   const issuedValue = invoices.reduce((sum, inv) => sum + (Number(inv.valor) || 0), 0);
   const valueToIssue = Math.max(annualLimit - issuedValue, 0);
@@ -193,7 +227,6 @@ export default function InvoicesPage() {
         </Button>
       </div>
 
-      {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="pb-2">
@@ -235,7 +268,6 @@ export default function InvoicesPage() {
         </Card>
       </div>
 
-      {/* Controle de emissão */}
       <Card>
         <CardHeader className="flex flex-row gap-4 justify-between items-center">
           <h2 className="text-xl font-bold">Controle de Emissão de Notas</h2>
@@ -267,14 +299,18 @@ export default function InvoicesPage() {
         </CardContent>
       </Card>
 
-      {/* Sheet para nova nota */}
       <InvoiceFormSheet
         isOpen={isSheetOpen}
-        onClose={() => setIsSheetOpen(false)}
-        onSave={() => {
-          void fetchInvoices();
+        onClose={() => {
           setIsSheetOpen(false);
+          setInvoiceToEdit(null);
         }}
+        onSave={() => {
+          fetchInvoices();
+          setIsSheetOpen(false);
+          setInvoiceToEdit(null);
+        }}
+        invoiceToEdit={invoiceToEdit}
       />
     </div>
   );
