@@ -4,13 +4,16 @@
 'use client'; 
 
 import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
-import { Users, Briefcase, DollarSign, MoreHorizontal, Edit, Trash2, Eye } from 'lucide-react';
+import { Users, Briefcase, DollarSign, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { 
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
+import { 
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
+} from "@/components/ui/table";
 import { type Client } from '@/types';
 import { AddClientSheet } from '@/components/AddClientSheet';
 
@@ -42,10 +45,10 @@ export default function ClientsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const supabase = createSupabaseBrowserClient();
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Estado para controlar o sheet de Adicionar/Editar Cliente
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
@@ -106,7 +109,7 @@ export default function ClientsPage() {
         if (error) {
             alert(`Erro ao excluir cliente: ${error.message}`);
         } else {
-            fetchClients(); // Re-fetch para atualizar a lista e os totais
+            fetchClients();
         }
     }
   };
@@ -141,7 +144,7 @@ export default function ClientsPage() {
             value={String(totalClientes)} 
             description="Clientes cadastrados" 
             icon={Users} 
-            valueColor="text-success" 
+            valueColor="text-success-600" 
         />
         <ClientStatCard 
             title="Projetos Ativos" 
@@ -155,14 +158,14 @@ export default function ClientsPage() {
             value={valorTotalProjetos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}  
             description="Em projetos ativos" 
             icon={DollarSign} 
-            valueColor="text-success" 
+            valueColor="text-success-600" 
         />
       </div>
 
-      <div className="bg-card rounded-xl shadow-card p-6">
-        <div className="flex justify-between items-center mb-4">
+      <div className="bg-card rounded-xl shadow-card">
+        <div className="flex justify-between items-center p-6">
             <h2 className="text-2xl font-bold">Clientes</h2>
-            <Button variant="outline" onClick={handleAddNew}>Cadastrar novo cliente</Button>
+            <Button onClick={handleAddNew}>Cadastrar novo cliente</Button>
         </div>
 
         <div className="overflow-x-auto">
@@ -170,58 +173,55 @@ export default function ClientsPage() {
                  <p className="p-5 text-center text-muted-foreground">Carregando clientes...</p>
             ) : (
                 <>
-                    <table className="w-full text-sm text-left text-muted-foreground">
-                        <thead className="text-xs uppercase bg-muted text-muted-foreground">
-                            <tr>
-                                <th scope="col" className="px-6 py-3">Nome</th>
-                                <th scope="col" className="px-6 py-3">Contato</th>
-                                <th scope="col" className="px-6 py-3">Origem</th>
-                                <th scope="col" className="px-6 py-3 text-center">Projetos</th>
-                                <th scope="col" className="px-6 py-3 text-right">Valor Total</th>
-                                <th scope="col" className="px-6 py-3 text-center">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Nome</TableHead>
+                                <TableHead>Contato</TableHead>
+                                <TableHead>Origem</TableHead>
+                                <TableHead className="text-center">Projetos</TableHead>
+                                <TableHead className="text-right">Valor Total</TableHead>
+                                <TableHead className="text-center">Ações</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
                             {paginatedClients.map((client) => (
-                                <tr key={client.id} className="border-b border-border hover:bg-muted">
-                                    <td className="px-6 py-4 font-medium text-foreground">
+                                <TableRow key={client.id}>
+                                    <TableCell className="font-medium text-foreground">
                                         <div>{client.nome}</div>
                                         <div className="text-xs text-muted-foreground">{client.empresa}</div>
-                                    </td>
-                                    <td className="px-6 py-4">
+                                    </TableCell>
+                                    <TableCell>
                                         <div>{client.email_contato}</div>
                                         <div className="text-xs text-muted-foreground">{client.telefone}</div>
-                                    </td>
-                                    <td className="px-6 py-4">{client.origem}</td>
-                                    <td className="px-6 py-4 text-center">{client.projetos}</td>
-                                    <td className="px-6 py-4 text-right font-semibold">
+                                    </TableCell>
+                                    <TableCell>{client.origem}</TableCell>
+                                    <TableCell className="text-center">{client.projetos}</TableCell>
+                                    <TableCell className="text-right font-semibold">
                                         {client.valor_total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                    </td>
-                                    <td className="px-6 py-4 text-center">
+                                    </TableCell>
+                                    <TableCell className="text-center">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <button className="p-2 rounded-full hover:bg-accent">
+                                                <Button variant="ghost" size="icon" className="w-8 h-8">
                                                     <MoreHorizontal className="w-4 h-4" />
-                                                </button>
+                                                </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent>
-                                                <DropdownMenuItem asChild>
-                                                    <Link href={`/dashboard/clients/${client.id}/edit`}><Eye className="w-4 h-4 mr-2"/> Ver</Link>
-                                                </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => handleEdit(client)}>
                                                     <Edit className="w-4 h-4 mr-2"/> Editar
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleDeleteClient(client.id)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                                                <DropdownMenuItem onClick={() => handleDeleteClient(client.id)} className="text-destructive focus:text-destructive">
                                                     <Trash2 className="w-4 h-4 mr-2"/> Excluir
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             ))}
-                        </tbody>
-                    </table>
-                    <div className="flex items-center justify-end space-x-2 py-4">
+                        </TableBody>
+                    </Table>
+                    <div className="flex items-center justify-end space-x-2 p-4 border-t border-border">
                         <Button
                             variant="outline"
                             size="sm"
