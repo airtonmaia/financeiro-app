@@ -42,7 +42,12 @@ const formatBRL = (value: number) => {
 // --- COMPONENTES ---
 
 function ProjectCard({ project, onOpen, onEdit, onMove, onDelete, statuses }: { project: Project & { task_groups: TaskGroup[] }; onOpen: () => void; onEdit: () => void; onMove: () => void; onDelete: () => void; statuses: ProjectStatus[]; }) {
-    const diasRestantes = project.data_entrega ? Math.ceil((new Date(project.data_entrega).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
+    const diasRestantes = useMemo(() => {
+        if (!project.data_entrega) {
+            return null;
+        }
+        return Math.ceil((new Date(project.data_entrega).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+    }, [project.data_entrega]);
     
     const priorityClasses: { [key: string]: string } = {
         'Alta': 'bg-destructive/20 text-destructive',
