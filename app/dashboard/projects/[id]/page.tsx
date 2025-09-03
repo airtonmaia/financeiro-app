@@ -14,7 +14,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 // --- COMPONENTES ---
 
 function ProjectCard({ project, index, statusColor }: { project: Project & { subtasks: Subtask[] }, index: number, statusColor: string }) {
-    const diasRestantes = Math.ceil((new Date(project.data_entrega).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+    const diasRestantes = project.data_entrega ? Math.ceil((new Date(project.data_entrega).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
     const subtasksConcluidas = project.subtasks?.filter(st => st.concluida).length || 0;
     const totalSubtasks = project.subtasks?.length || 0;
 
@@ -48,10 +48,12 @@ function ProjectCard({ project, index, statusColor }: { project: Project & { sub
                             <div className="w-6 h-6 bg-gray-300 rounded-full border-2 border-white dark:border-dark-secondary"></div>
                             <div className="w-6 h-6 bg-gray-400 rounded-full border-2 border-white dark:border-dark-secondary flex items-center justify-center text-xs font-bold">A</div>
                         </div>
-                        <div className={`flex items-center gap-1 text-xs font-semibold ${diasRestantes < 0 ? 'text-danger-text' : 'text-gray-text'}`}>
-                            <Clock className="w-3 h-3" />
-                            <span>{diasRestantes > 0 ? `${diasRestantes} dias restantes` : 'Atrasado'}</span>
-                        </div>
+                        {diasRestantes !== null && (
+                            <div className={`flex items-center gap-1 text-xs font-semibold ${diasRestantes < 0 ? 'text-danger-text' : 'text-gray-text'}`}>
+                                <Clock className="w-3 h-3" />
+                                <span>{diasRestantes > 0 ? `${diasRestantes} dias restantes` : diasRestantes === 0 ? 'Hoje' : 'Atrasado'}</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
