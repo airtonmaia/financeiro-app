@@ -285,14 +285,13 @@ export default function CashFlowPage() {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) return;
 
-                const { projetos, clientes, isGenerated: _, ...baseTransaction } = transaction;
+                const { id, projetos, clientes, isGenerated: _, ...baseTransaction } = transaction;
                 const newTransaction = {
                     ...baseTransaction,
                     user_id: user.id,
                     status: 'Pago',
                     recorrente: false,
                 };
-                delete newTransaction.id;
 
                 await supabase.from('transacoes').insert(newTransaction);
                 await fetchTransactions();
