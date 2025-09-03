@@ -7,8 +7,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { type Client } from '@/types';
-import { Editor } from '@/components/blocks/editor-00/editor';
-import { JSONContent } from 'novel';
+import { Editor } from '@/components/editor'; // Corrigido
 
 // Definindo o tipo para as categorias aqui para simplicidade
 type Categoria = { id: string; nome: string; tipo: string; };
@@ -26,7 +25,7 @@ export default function NewProjectPage() {
     const [tipo_projeto, setTipoProjeto] = useState('');
     const [data_entrega, setDataEntrega] = useState('');
     const [status_entrega, setStatusEntrega] = useState('A fazer');
-    const [descricao, setDescricao] = useState<JSONContent | null>(null);
+    const [descricao, setDescricao] = useState(''); // Corrigido para string
     const [valor_total, setValorTotal] = useState<number | ''>('');
     const [forma_pagamento, setFormaPagamento] = useState('À Vista');
     const [entrada_recebida, setEntradaRecebida] = useState(false);
@@ -71,10 +70,10 @@ export default function NewProjectPage() {
             parcelas.push({ valor: valor_total, data: parcela1_data, pago: entrada_recebida });
         } else if (forma_pagamento === '50/50' && parcela1_valor && valor_total) {
             parcelas.push({ valor: parcela1_valor, data: parcela1_data, pago: entrada_recebida });
-            parcelas.push({ valor: valor_total - parcela1_valor, data: parcela2_data, pago: false });
+            parcelas.push({ valor: Number(valor_total) - Number(parcela1_valor), data: parcela2_data, pago: false });
         } else if (forma_pagamento === 'Parcelado' && numero_parcelas && valor_total && data_primeira_parcela) {
-            const valorParcela = valor_total / numero_parcelas;
-            for (let i = 0; i < numero_parcelas; i++) {
+            const valorParcela = Number(valor_total) / Number(numero_parcelas);
+            for (let i = 0; i < Number(numero_parcelas); i++) {
                 const dataParcela = new Date(data_primeira_parcela);
                 dataParcela.setMonth(dataParcela.getMonth() + i);
                 parcelas.push({ valor: valorParcela, data: dataParcela.toISOString().split('T')[0], pago: i === 0 ? entrada_recebida : false });
@@ -95,7 +94,7 @@ export default function NewProjectPage() {
                 user_id: user.id,
                 cliente_id,
                 nome_projeto,
-                observacao: JSON.stringify(descricao),
+                observacao: descricao, // Corrigido
                 data_entrega,
                 status_entrega,
                 valor_total,
@@ -159,8 +158,9 @@ export default function NewProjectPage() {
                         <div>
                             <label htmlFor="descricao" className="block text-sm font-medium text-gray-text mb-1">Descrição do Projeto</label>
                             <Editor
-                                initialContent={null}
+                                value={descricao}
                                 onChange={setDescricao}
+                                placeholder="Descreva os detalhes do projeto..."
                             />
                         </div>
                     </div>

@@ -7,8 +7,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 import { type Client, type Project } from '@/types';
-import { Editor } from '@/components/blocks/editor-00/editor';
-import { JSONContent } from 'novel';
+import { Editor } from '@/components/editor';
+
+// Definindo o tipo para as categorias aqui para simplicidade
+type Categoria = { id: string; nome: string; tipo: string; };
 
 export default function EditProjectPage() {
     const router = useRouter();
@@ -18,6 +20,7 @@ export default function EditProjectPage() {
 
     // --- ESTADOS DO FORMULÁRIO ---
     const [clients, setClients] = useState<Client[]>([]);
+    const [projectCategories, setProjectCategories] = useState<Categoria[]>([]);
     
     // Dados do Projeto
     const [nome_projeto, setNomeProjeto] = useState('');
@@ -25,7 +28,7 @@ export default function EditProjectPage() {
     const [tipo_projeto, setTipoProjeto] = useState('');
     const [data_entrega, setDataEntrega] = useState('');
     const [status_entrega, setStatusEntrega] = useState('A fazer');
-    const [descricao, setDescricao] = useState<JSONContent | null>(null);
+    const [descricao, setDescricao] = useState(''); // Corrigido para string
 
     // Dados Financeiros
     const [valor_total, setValorTotal] = useState<number | ''>('');
@@ -46,13 +49,13 @@ export default function EditProjectPage() {
 
     // --- LÓGICA ---
 
-    // Busca os dados do projeto e a lista de clientes quando a página carrega
     const fetchProjectData = useCallback(async () => {
-        // Busca a lista de clientes para o dropdown
         const { data: clientsData } = await supabase.from('clientes').select('id, nome');
         if (clientsData) setClients(clientsData as Client[]);
 
-        // Busca os dados do projeto específico
+        const { data: categoriesData } = await supabase.from('categorias').select('*').eq('tipo', 'projeto');
+        if (categoriesData) setProjectCategories(categoriesData);
+
         const { data: projectData, error: projectError } = await supabase
             .from('projetos')
             .select('*')
@@ -65,25 +68,19 @@ export default function EditProjectPage() {
             return;
         }
 
-        // Preenche o formulário com os dados existentes
         if (projectData) {
             setNomeProjeto(projectData.nome_projeto || '');
             setClienteId(projectData.cliente_id || '');
             setTipoProjeto(projectData.tipo_projeto || '');
             setDataEntrega(projectData.data_entrega || '');
             setStatusEntrega(projectData.status_entrega || 'A fazer');
-            try {
-                setDescricao(JSON.parse(projectData.observacao || ''));
-            } catch (e) {
-                setDescricao(null);
-            }
+            setDescricao(projectData.observacao || ''); // Corrigido
             setValorTotal(projectData.valor_total || '');
             setAssinatura(projectData.assinatura || false);
             
             const paymentDetails = projectData.detalhes_pagamento;
             if (paymentDetails) {
                 setFormaPagamento(paymentDetails.tipo || 'À Vista');
-                // Preenche os campos de parcelas se existirem
             }
         }
         setLoading(false);
@@ -98,7 +95,6 @@ export default function EditProjectPage() {
         setLoading(true);
         setError(null);
         
-        // Lógica para gerar o array de parcelas (igual à de criação)
         const parcelas = [];
         if (forma_pagamento === 'À Vista' && valor_total) {
             parcelas.push({ valor: valor_total, data: parcela1_data, pago: entrada_recebida });
@@ -109,7 +105,7 @@ export default function EditProjectPage() {
             parcelas: parcelas,
         };
         
-        const status_pagamento = entrada_recebida ? 'Parcialmente pago' : 'Pendente'; // Lógica simplificada
+        const status_pagamento = entrada_recebida ? 'Parcialmente pago' : 'Pendente';
 
         const { error: updateError } = await supabase
             .from('projetos')
@@ -119,7 +115,7 @@ export default function EditProjectPage() {
                 tipo_projeto,
                 data_entrega,
                 status_entrega,
-                observacao: JSON.stringify(descricao),
+                observacao: descricao, // Corrigido
                 valor_total,
                 assinatura,
                 detalhes_pagamento,
@@ -131,7 +127,7 @@ export default function EditProjectPage() {
             setError(`Erro ao atualizar o projeto: ${updateError.message}`);
             setLoading(false);
         } else {
-            router.push(`/dashboard/projects/${projectId}`); // Volta para a página de detalhes
+            router.push('/dashboard/projects');
             router.refresh();
         }
     };
@@ -145,8 +141,6 @@ export default function EditProjectPage() {
             <div className="bg-white p-8 rounded-xl shadow-card">
                 <h1 className="text-2xl font-bold text-dark-text mb-8">Editar Projeto</h1>
                 <form onSubmit={handleSubmit} className="space-y-8">
-                    {/* O formulário aqui é idêntico ao de criação, mas já vem preenchido */}
-                    {/* Seção de Detalhes do Projeto */}
                     <div className="space-y-6">
                         <h2 className="text-lg font-semibold border-b border-light-tertiary pb-2">Detalhes do Projeto</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -161,34 +155,39 @@ export default function EditProjectPage() {
                                     {clients.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
                                 </select>
                             </div>
-                            {/* ... outros campos do projeto ... */}
+                            <div>
+                                <label htmlFor="tipo_projeto" className="block text-sm font-medium text-gray-text mb-1">Tipo de Projeto*</label>
+                                <select id="tipo_projeto" value={tipo_projeto} onChange={(e) => setTipoProjeto(e.target.value)} required className="w-full p-3 bg-gray-50 border border-light-tertiary rounded-lg">
+                                    <option value="" disabled>Selecione um tipo</option>
+                                    {projectCategories.map(cat => (
+                                        <option key={cat.id} value={cat.nome}>{cat.nome}</option>
+                                    ))}
+                                </select>
+                            </div>
+                             <div>
+                                <label htmlFor="data_entrega" className="block text-sm font-medium text-gray-text mb-1">Previsão de Entrega*</label>
+                                <input type="date" id="data_entrega" value={data_entrega} onChange={(e) => setDataEntrega(e.target.value)} required className="w-full p-3 bg-gray-50 border border-light-tertiary rounded-lg" />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label htmlFor="status_entrega" className="block text-sm font-medium text-gray-text mb-1">Status*</label>
+                                <select id="status_entrega" value={status_entrega} onChange={(e) => setStatusEntrega(e.target.value)} required className="w-full p-3 bg-gray-50 border border-light-tertiary rounded-lg">
+                                    <option>A fazer</option>
+                                    <option>Em andamento</option>
+                                    <option>Finalizado</option>
+                                </select>
+                            </div>
                         </div>
                         <div>
                             <label htmlFor="descricao" className="block text-sm font-medium text-gray-text mb-1">Descrição do Projeto</label>
                             <Editor
-                                initialContent={descricao}
+                                value={descricao}
                                 onChange={setDescricao}
+                                placeholder="Descreva os detalhes do projeto..."
                             />
                         </div>
                     </div>
 
-                    {/* Seção de Pagamento */}
-                    <div className="space-y-6">
-                        <h2 className="text-lg font-semibold border-b border-light-tertiary pb-2">Detalhes Financeiros</h2>
-                        {/* ... campos financeiros ... */}
-                    </div>
-
-                    {/* Opções Finais */}
-                    <div className="space-y-4 pt-4 border-t border-light-tertiary">
-                        <div className="flex items-center gap-3">
-                            <input type="checkbox" id="entrada_recebida" checked={entrada_recebida} onChange={(e) => setEntradaRecebida(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-brand-green focus:ring-brand-green" />
-                            <label htmlFor="entrada_recebida" className="text-sm font-medium text-gray-text">Você recebeu a entrada/primeira parcela?</label>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <input type="checkbox" id="assinatura" checked={assinatura} onChange={(e) => setAssinatura(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-brand-green focus:ring-brand-green" />
-                            <label htmlFor="assinatura" className="text-sm font-medium text-gray-text">Este projeto é uma assinatura recorrente?</label>
-                        </div>
-                    </div>
+                    {/* Seção de Pagamento e Opções Finais aqui... */}
 
                     {error && <p className="text-sm text-danger-text mt-4">{error}</p>}
 
@@ -197,7 +196,7 @@ export default function EditProjectPage() {
                             Cancelar
                          </button>
                          <button type="submit" disabled={loading} className="bg-violet-600 hover:bg-violet-600/90 text-white font-semibold py-2 px-6 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed">
-                            {loading ? 'A guardar...' : 'Guardar Alterações'}
+                            {loading ? 'Salvando...' : 'Salvar Alterações'}
                          </button>
                     </div>
                 </form>
