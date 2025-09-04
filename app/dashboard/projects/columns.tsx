@@ -36,7 +36,11 @@ export const columns: ColumnDef<Project>[] = [
     accessorKey: "data_entrega",
     header: "Data de Entrega",
     cell: ({ row }) => {
-      const date = new Date(row.original.data_entrega);
+      const data_entrega = row.original.data_entrega;
+      if (!data_entrega) {
+        return "N/A";
+      }
+      const date = new Date(data_entrega);
       return date.toLocaleDateString('pt-BR');
     },
   },
