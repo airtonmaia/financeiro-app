@@ -18,6 +18,12 @@ import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 
+// NOVO: Tipo para exceções de recorrência
+type RecurrenceException = {
+    transacao_id: string;
+    data_excecao: string; // YYYY-MM-DD
+};
+
 // Definindo o tipo para as categorias aqui para simplicidade
 type Categoria = { id: string; nome: string; tipo: string; };
 
@@ -79,9 +85,9 @@ function TransactionModal({ isOpen, onClose, onSave, transactionToEdit }: { isOp
     useEffect(() => {
         const fetchData = async () => {
             const { data: clientsData } = await supabase.from('clientes').select('id, nome');
-            if (clientsData) setClients(clientsData as Client[]);
+            if (clientsData) setClients(clientsData as any[]); // TODO: Fix this type assertion
             const { data: projectsData } = await supabase.from('projetos').select('id, descricao');
-            if (projectsData) setProjects(projectsData as Project[]);
+            if (projectsData) setProjects(projectsData as any[]); // TODO: Fix this type assertion
             const { data: categoriesData } = await supabase.from('categorias').select('*');
             if (categoriesData) {
                 setIncomeCategories(categoriesData.filter(c => c.tipo === 'receita'));
@@ -146,6 +152,7 @@ function TransactionModal({ isOpen, onClose, onSave, transactionToEdit }: { isOp
 // --- PÁGINA PRINCIPAL ---
 export default function CashFlowPage() {
     const [transactions, setTransactions] = useState<Transacao[]>([]);
+    const [exceptions, setExceptions] = useState<RecurrenceException[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [transactionToEdit, setTransactionToEdit] = useState<Transacao | null>(null);
@@ -157,8 +164,13 @@ export default function CashFlowPage() {
 
     const fetchTransactions = useCallback(async () => {
         setLoading(true);
-        const { data } = await supabase.from('transacoes').select('*, projetos(descricao), clientes(nome)').order('data', { ascending: true });
-        if (data) setTransactions(data as Transacao[]);
+        const transactionPromise = supabase.from('transacoes').select('*, projetos(descricao), clientes(nome)').order('data', { ascending: true });
+        const exceptionPromise = supabase.from('excecoes_transacoes_recorrentes').select('transacao_id, data_excecao');
+
+        const [{ data: transactionData }, { data: exceptionData }] = await Promise.all([transactionPromise, exceptionPromise]);
+
+        if (transactionData) setTransactions(transactionData as Transacao[]);
+        if (exceptionData) setExceptions(exceptionData as RecurrenceException[]);
         setLoading(false);
     }, [supabase]);
 
@@ -197,7 +209,11 @@ export default function CashFlowPage() {
                                !t2.recorrente
                     );
 
-                    if (!alreadyExistsAsReal) {
+                    const isExcepted = exceptions.some(
+                        ex => ex.transacao_id === t.id && ex.data_excecao === instanceDateStr
+                    );
+
+                    if (!alreadyExistsAsReal && !isExcepted) {
                         generated.push({
                             ...t,
                             id: `${t.id}-${monthStr}`,
@@ -210,7 +226,7 @@ export default function CashFlowPage() {
                 }
             });
         return [...transactions, ...generated];
-    }, [transactions]);
+    }, [transactions, exceptions]);
 
     const saldoAnterior = useMemo(() => {
         if (!selectedMonth) return 0;
@@ -266,9 +282,38 @@ export default function CashFlowPage() {
 
     const handleDeleteTransaction = async (id: string) => {
         const transaction = allTransactionsWithRecurrences.find(t => t.id === id);
-        if (window.confirm("Tem certeza? Se for uma transação recorrente, todas as futuras instâncias também serão removidas.")) {
-            const originalId = transaction?.isGenerated ? id.split('-')[0] : id;
-            await supabase.from('transacoes').delete().eq('id', originalId);
+        if (!transaction) return;
+
+        // Case 1: Trying to delete a virtual/generated instance
+        if (transaction.isGenerated) {
+            const originalId = transaction.id.split('-')[0];
+            const exceptionDate = transaction.data;
+
+            if (window.confirm(`Deseja realmente pular a recorrência de "${transaction.descricao}" para este mês?`)) {
+                const { error } = await supabase.from('excecoes_transacoes_recorrentes').insert({
+                    transacao_id: originalId,
+                    data_excecao: exceptionDate
+                });
+
+                if (error) {
+                    alert(`Erro ao pular recorrência: ${error.message}`);
+                } else {
+                    fetchTransactions();
+                }
+            }
+            return;
+        }
+
+        // Case 2: Deleting a real transaction
+        let confirmationMessage = "Tem certeza que deseja excluir esta transação?";
+        
+        // Case 2a: The real transaction is a recurring master
+        if (transaction.recorrente) {
+            confirmationMessage = "Tem certeza? Esta é uma transação recorrente. Excluí-la removerá todas as suas futuras instâncias.";
+        }
+
+        if (window.confirm(confirmationMessage)) {
+            await supabase.from('transacoes').delete().eq('id', transaction.id);
             fetchTransactions();
         }
     };
