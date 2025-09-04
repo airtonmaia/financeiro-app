@@ -13,10 +13,10 @@ export async function middleware(request: NextRequest) {
     },
   })
 
-  // Corrigido: Use as variáveis de ambiente do lado do servidor, sem o prefixo NEXT_PUBLIC_
+  // As variáveis de ambiente precisam do prefixo NEXT_PUBLIC_ para serem acessíveis no middleware
   const supabase = createServerClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {
