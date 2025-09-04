@@ -29,7 +29,7 @@ export default async function PublicBoardPage({ params }: Props) {
                 .order('display_order', { ascending: true }),
             supabase
                 .from('projetos')
-                .select('id, descricao, data_entrega, status_entrega')
+                .select('*')
                 .eq('quadro_id', boardId)
         ]);
 
