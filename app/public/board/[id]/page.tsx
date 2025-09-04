@@ -24,7 +24,7 @@ export default async function PublicBoardPage({ params }: Props) {
                 .single(),
             supabase
                 .from('project_statuses')
-                .select('id, name, color, display_order')
+                .select('*')
                 .eq('quadro_id', boardId)
                 .order('display_order', { ascending: true }),
             supabase
