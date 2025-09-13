@@ -271,7 +271,8 @@ export default function CashFlowPage() {
     
     const handleEditTransaction = (transaction: Transacao) => {
         if (transaction.isGenerated) {
-            const originalId = transaction.id.split('-')[0];
+            const lastHyphenIndex = transaction.id.lastIndexOf('-');
+            const originalId = transaction.id.substring(0, lastHyphenIndex);
             const originalTransaction = transactions.find(t => t.id === originalId);
             setTransactionToEdit(originalTransaction || transaction);
         } else {
@@ -286,7 +287,8 @@ export default function CashFlowPage() {
 
         // Case 1: Trying to delete a virtual/generated instance
         if (transaction.isGenerated) {
-            const originalId = transaction.id.split('-')[0];
+            const lastHyphenIndex = transaction.id.lastIndexOf('-');
+            const originalId = transaction.id.substring(0, lastHyphenIndex);
             const exceptionDate = transaction.data;
 
             if (window.confirm(`Deseja realmente pular a recorrência de "${transaction.descricao}" para este mês?`)) {
