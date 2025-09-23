@@ -7,6 +7,23 @@ import { NextResponse, type NextRequest } from 'next/server'
 export async function middleware(request: NextRequest) {
   console.log(`\n--- [Middleware] Nova Requisição: ${request.method} ${request.nextUrl.pathname}`);
 
+  // Verificar se as variáveis de ambiente estão disponíveis
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('[Middleware] Variáveis de ambiente do Supabase não encontradas:', {
+      url: !!supabaseUrl,
+      key: !!supabaseAnonKey
+    });
+    // Permitir que a requisição continue sem autenticação se as variáveis não estiverem disponíveis
+    return NextResponse.next({
+      request: {
+        headers: request.headers,
+      },
+    });
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -15,8 +32,8 @@ export async function middleware(request: NextRequest) {
 
   // As variáveis de ambiente precisam do prefixo NEXT_PUBLIC_ para serem acessíveis no middleware
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         get(name: string) {
