@@ -92,27 +92,53 @@ function NavGroup({ icon: Icon, text, subItems, activeSubItem }: { icon: React.E
 
 export default function NewSidebar() {
     const pathname = usePathname();
-    const supabase = createSupabaseBrowserClient();
     const [boards, setBoards] = React.useState<Quadro[]>([]);
     const [logoUrl, setLogoUrl] = React.useState<string | null>(null);
+    const [supabaseError, setSupabaseError] = React.useState<string | null>(null);
 
     React.useEffect(() => {
         const fetchBoardsAndLogo = async () => {
-            const { data: boardsData } = await supabase.from('quadros').select('id, nome, cor');
-            if (boardsData) {
-                setBoards(boardsData as Quadro[]);
-            }
-
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                const { data: profile } = await supabase.from('profiles').select('logo_url').eq('id', user.id).single();
-                if (profile && profile.logo_url) {
-                    setLogoUrl(profile.logo_url);
+            try {
+                const supabase = createSupabaseBrowserClient();
+                
+                const { data: boardsData } = await supabase.from('quadros').select('id, nome, cor');
+                if (boardsData) {
+                    setBoards(boardsData as Quadro[]);
                 }
+
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    const { data: profile } = await supabase.from('profiles').select('logo_url').eq('id', user.id).single();
+                    if (profile && profile.logo_url) {
+                        setLogoUrl(profile.logo_url);
+                    }
+                }
+            } catch (error) {
+                console.error('Supabase initialization error:', error);
+                setSupabaseError('Database connection not configured. Please set up your Supabase credentials.');
             }
         };
         fetchBoardsAndLogo();
-    }, [supabase]);
+    }, []);
+
+    if (supabaseError) {
+        return (
+            <Sidebar className="p-2 bg-sidebar">
+                <SidebarHeader>
+                    <div className="flex items-center lg:justify-start">
+                        <span className="ml-1 text-xl font-bold text-violet-700 dark:text-light-text">Agência 360</span>
+                    </div>
+                    <Separator className="my-4" />
+                </SidebarHeader>
+                <SidebarContent>
+                    <div className="p-4 text-center text-muted-foreground">
+                        <p className="text-sm">{supabaseError}</p>
+                        <p className="text-xs mt-2">Check your .env.local file</p>
+                    </div>
+                </SidebarContent>
+            </Sidebar>
+        );
+    }
 
     return (
         <Sidebar className="p-2 bg-sidebar">
