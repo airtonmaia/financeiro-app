@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { 
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
+import { Input } from "@/components/ui/input";
 import { 
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
@@ -51,6 +52,7 @@ export default function ClientsPage() {
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchClients = useCallback(async () => {
     setLoading(true);
@@ -114,9 +116,19 @@ export default function ClientsPage() {
     }
   };
 
+  // Filtra os clientes com base na busca
+  const filteredClients = clients.filter(client => {
+    const searchTerm = searchQuery.toLowerCase();
+    return (
+      (client.nome && client.nome.toLowerCase().includes(searchTerm)) ||
+      (client.empresa && client.empresa.toLowerCase().includes(searchTerm)) ||
+      (client.email_contato && client.email_contato.toLowerCase().includes(searchTerm))
+    );
+  });
+
   // Lógica de Paginação
-  const totalPages = Math.ceil(clients.length / itemsPerPage);
-  const paginatedClients = clients.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
+  const paginatedClients = filteredClients.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   if (error) {
     return <div className="p-5 text-center text-destructive bg-destructive/10 rounded-lg">{error}</div>;
@@ -164,7 +176,13 @@ export default function ClientsPage() {
 
       <div className="bg-card rounded-xl shadow-card">
         <div className="flex justify-between items-center p-6">
-            <h2 className="text-2xl font-bold">Clientes</h2>
+            <div className="w-1/3">
+              <Input 
+                placeholder="Buscar por nome, empresa ou e-mail..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
             <Button onClick={handleAddNew}>Cadastrar novo cliente</Button>
         </div>
 
